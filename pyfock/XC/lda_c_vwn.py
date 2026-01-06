@@ -6,17 +6,15 @@ except ImportError:
     MLX_AVAILABLE = False
     mx = None
 
-try:
-    # import cupy as cp (replaced with MLX for Apple Silicon)
-    # from cupy import fuse (replaced with MLX for Apple Silicon)
-except Exception as e:
-    # Handle the case when Cupy is not installed
-    cp = None
-    # Define a dummy fuse decorator for CPU version
-    def fuse(kernel_name):
-        def decorator(func):
-            return func 
-        return decorator
+# CuPy has been removed - using MLX/NumPy instead
+cp = None
+
+# Define a dummy fuse decorator for CPU version
+def fuse(kernel_name):
+    def decorator(func):
+        return func 
+    return decorator
+
 import numpy as np
 
 # The following implementation of the Vosko-Wilk-Nusair parametrization of the correlation functional
