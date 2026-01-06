@@ -1,5 +1,5 @@
 import numpy as np
-from numba import njit 
+# Removed numba import - using pure Python for MLX compatibility
 from .integral_helpers import comb
 import math
 
@@ -11,8 +11,8 @@ More specifically from this file:
 https://github.com/rpmuller/MolecularIntegrals.jl/blob/master/src/Rys.jl
 '''
 
-"Form coulomb repulsion integral using Rys quadrature"
-@njit(cache=True,fastmath=True, error_model='numpy', nogil=True)#, locals=dict(ijkl=np.float32, Ix=np.float32, Iy=np.float32, Iz=np.float32, val=np.float32)
+# Form coulomb repulsion integral using Rys quadrature
+# MLX compatible - no JIT
 def coulomb_rys(roots,weights,G,rpq2, rho, norder,n,m,la,lb,lc,ld,ma,mb,mc,md,na,nb,nc,nd,alphaik, alphajk, alphakk, alphalk,I,J,K,L):
     X = rpq2*rho
 
@@ -52,7 +52,7 @@ def coulomb_rys(roots,weights,G,rpq2, rho, norder,n,m,la,lb,lc,ld,ma,mb,mc,md,na
     return  val
 
 "Form coulomb repulsion integral using Rys quadrature"
-@njit(cache=True, fastmath=True, error_model='numpy', nogil=True, inline='always')#, locals=dict(ijkl=np.float32, Ix=np.float32, Iy=np.float32, Iz=np.float32, val=np.float32)
+# MLX compatible - no JIT
 def coulomb_rys_3c2e(roots,weights,G,rpq2, rho, norder,n,m,la,lb,lc,ld,ma,mb,mc,md,na,nb,nc,nd,alphaik, alphajk, alphakk, alphalk,I,J,K,L,P):
     X = rpq2*rho
     roots, weights = Roots(norder,X,roots,weights)
@@ -135,7 +135,7 @@ def coulomb_rys_3c2e(roots,weights,G,rpq2, rho, norder,n,m,la,lb,lc,ld,ma,mb,mc,
     
     return  val
 
-@njit(cache=True,fastmath=True, error_model='numpy', nogil=True)#, locals=dict(ijkl=np.float32, Ix=np.float32, Iy=np.float32, Iz=np.float32, val=np.float32)
+# MLX compatible - no JIT
 def coulomb_rys_new(roots,weights,G,rpq2, rho, norder,n,m,la,lb,lc,ld,ma,mb,mc,md,na,nb,nc,nd,alphaik, alphajk, alphakk, alphalk,I,J,K,L):
     X = rpq2*rho
     # print('s')
@@ -184,7 +184,7 @@ def coulomb_rys_new(roots,weights,G,rpq2, rho, norder,n,m,la,lb,lc,ld,ma,mb,mc,m
     return  val
 
 "Should be Faster but isn't"
-@njit(cache=True,fastmath=True, error_model='numpy', nogil=True)#, locals=dict(ijkl=np.float32, Ix=np.float32, Iy=np.float32, Iz=np.float32, val=np.float32)
+# MLX compatible - no JIT
 def coulomb_rys_fast(roots,weights,G,norder,la,lb,lc,ld,ma,mb,mc,md,na,nb,nc,nd,alphaik, alphajk, alphakk, alphalk,I,J,K,L,X,A,B,Ap,Bp,ABsrt,factor,P,Q):
     
     roots, weights = Roots(norder,X,roots,weights)
@@ -213,13 +213,13 @@ def coulomb_rys_fast(roots,weights,G,norder,la,lb,lc,ld,ma,mb,mc,md,na,nb,nc,nd,
     
     return  val
 
-@njit(cache=True,fastmath=True, error_model='numpy', nogil=True)
+# MLX compatible - no JIT
 def Int1d(G,t,ix,jx,kx,lx,xi,xj,xk,xl,alphai,alphaj,alphak,alphal):
     #G = RecurNumba2(G,t,ix,jx,kx,lx,xi,xj,xk,xl,alphai,alphaj,alphak,alphal)
     return Shift(G,ix,jx,kx,lx,xi-xj,xk-xl)
 
 "Form G(n,m)=I(n,0,m,0) intermediate values for a Rys polynomial"
-@njit(cache=True,fastmath=True, error_model='numpy', nogil=True)
+# MLX compatible - no JIT
 def Recur(G,t,i,j,k,l,xi,xj,xk,xl,alphai,alphaj,alphak,alphal,A,B,Ap,Bp,ABsrt):
     # print('RecurNumba1', G[0,0])
     # G1 = np.zeros((n1+1,m1+1))
@@ -262,7 +262,7 @@ def Recur(G,t,i,j,k,l,xi,xj,xk,xl,alphai,alphaj,alphak,alphal,A,B,Ap,Bp,ABsrt):
     
     return G
 
-@njit(cache=True,fastmath=True, error_model='numpy', nogil=True, inline='always')
+# MLX compatible - no JIT
 def Recur_3c2e(G,t,i,j,k,l,xi,xj,xk,xl,alphai,alphaj,alphak,alphal,A,B,Ap,ABsrt):
     # print('RecurNumba1', G[0,0])
     # G1 = np.zeros((n1+1,m1+1))
@@ -307,7 +307,7 @@ def Recur_3c2e(G,t,i,j,k,l,xi,xj,xk,xl,alphai,alphaj,alphak,alphal,A,B,Ap,ABsrt)
     return G
 
 "Faster"
-@njit(cache=True,fastmath=True, error_model='numpy', nogil=True)
+# MLX compatible - no JIT
 def Recur_fast(G,t,i,j,k,l,xi,xj,xk,xl,alphai,alphaj,alphak,alphal,A,B,Ap,Bp,ABsrt,Px,Qx):
     # print('RecurNumba1', G[0,0])
     # G1 = np.zeros((n1+1,m1+1))
@@ -352,7 +352,7 @@ def Recur_fast(G,t,i,j,k,l,xi,xj,xk,xl,alphai,alphaj,alphak,alphal,A,B,Ap,Bp,ABs
     return G
 
 "Form G(n,m)=I(n,0,m,0) intermediate values for a Rys polynomial"
-@njit(cache=True,fastmath=True, error_model='numpy', nogil=True)
+# MLX compatible - no JIT
 def Recur_new(G,t,i,j,k,l,xi,xj,xk,xl,A,B,value,Px,Qx):
     # print('RecurNumba1', G[0,0])
     # G1 = np.zeros((n1+1,m1+1))
@@ -420,7 +420,7 @@ LOOKUP_TABLE_COMB = np.array([
     [     1,     15,    105,    455,   1365,   3003,   5005,   6435,   6435,   5005,   3003,   1365,    455,    105,     15,      1]
 ])
 "Compute and  output I(i,j,k,l) from I(i+j,0,k+l,0) (G)"
-@njit(cache=True,fastmath=True, error_model='numpy', nogil=True)#, locals=dict(ijkl=np.float32)
+# MLX compatible - no JIT
 def Shift(G,i,j,k,l,xij,xkl):
     
     ijkl = 0.0 
@@ -456,7 +456,7 @@ def Shift(G,i,j,k,l,xij,xkl):
         ijkl += comb_2_*xkl**(l-m)*ijm0 # I(i,j,k,l)<-I(i,j,m,0)  
     return ijkl
 
-@njit(cache=True,fastmath=True, error_model='numpy', nogil=True)#, locals=dict(ijkl=np.float32)
+# MLX compatible - no JIT
 def Shift_3c2e(G,i,j,k,l,xij, inline='always'):
     
     ijm0 = 0.0
@@ -470,7 +470,7 @@ def Shift_3c2e(G,i,j,k,l,xij, inline='always'):
     ijkl = ijm0 # I(i,j,k,l)<-I(i,j,m,0)  
     return ijkl
 
-@njit(cache=True,fastmath=True, error_model='numpy', nogil=True)
+# MLX compatible - no JIT
 def RecurFactors(t,A,B,Px,Qx,xi,xk, inline='always'):
     ooopt = 1/(1+t)
     fact = t*ooopt/(A+B)
@@ -483,7 +483,7 @@ def RecurFactors(t,A,B,Px,Qx,xi,xk, inline='always'):
     Cp = (Qx-xk)*ooopt + (B*(Qx-xk)+A*(Px-xk))*fact
     return C,Cp,B0,B1,B1p
 
-# @njit(cache=True,fastmath=True, error_model='numpy', nogil=True)
+# # MLX compatible - no JIT
 # def RecurFactors_3c2e(t,A,B,Px,Qx,xi,xk):
 #     ooopt = 1/(1+t)
 #     fact = t*ooopt/(A+B)
@@ -497,7 +497,7 @@ def RecurFactors(t,A,B,Px,Qx,xi,xk, inline='always'):
 #     return C,Cp,B0,B1,B1p
 
 "Roots(n,X,roots,weights) - Return roots and weights of nth order Rys quadrature"
-@njit(cache=True,fastmath=True, error_model='numpy', nogil=True)
+# MLX compatible - no JIT
 def Roots(n,X,roots,weights):
     
     PIE4 = 7.85398163397448E-01
@@ -530,7 +530,7 @@ def Roots(n,X,roots,weights):
     elif n>5 and n<11:
         return Rootn(X,n,roots,weights)
 
-@njit(cache=True,fastmath=True, error_model='numpy')
+# MLX compatible - no JIT
 def nERIRys(t, q1, q2, q3, q4, a12, a34,
              A, B, C, D, P, Q, sRys):
     '''Calculate Rys polynomials for two-electron integrals
@@ -611,7 +611,7 @@ def nERIRys(t, q1, q2, q3, q4, a12, a34,
         
     return Rys
 
-@njit(cache=True,fastmath=True, error_model='numpy')
+# MLX compatible - no JIT
 def ChebGausInt(eps,M,a12,a34, qx1, qx2, qx3, qx4,
                          qy1, qy2, qy3,  qy4, qz1, qz2, qz3,  qz4, x1,
                          x2,  x3, x4,  y1,  y2,  y3, y4,
@@ -676,7 +676,7 @@ def ChebGausInt(eps,M,a12,a34, qx1, qx2, qx3, qx4,
     ssss = 1.0
     return 16*q/(3*n) 
 
-@njit(cache=True,fastmath=True, error_model='numpy', nogil=True)
+# MLX compatible - no JIT
 def clenshaw_d1(roots_or_weights, x, u, n):
     # Reference: https://github.com/sunqm/libcint/blob/master/src/polyfits.c (BSD-2 Clause license)
     i = 0
@@ -747,7 +747,7 @@ def clenshaw_d1(roots_or_weights, x, u, n):
 
     return roots_or_weights
         
-@njit(cache=True,fastmath=True, error_model='numpy', nogil=True)
+# MLX compatible - no JIT
 def Rootn(X,n,roots,weights):
     datax = DATA_X[((n - 1) * n // 2 - 15) * 14 * 31:]
     dataw = DATA_W[((n - 1) * n // 2 - 15) * 14 * 31:]
@@ -766,7 +766,7 @@ def Rootn(X,n,roots,weights):
     weights = clenshaw_d1(weights, dataw[offset:], tt, n)
     return roots, weights
 
-@njit(cache=True,fastmath=True, error_model='numpy', nogil=True, inline='always')
+# MLX compatible - no JIT
 def Root1(X,n,roots,weights):
     if X < 3.0E-7:
         roots0 = 0.5E+00-X/5.0E+00
@@ -830,7 +830,7 @@ def Root1(X,n,roots,weights):
 R12,PIE4 = 2.75255128608411E-01, 7.85398163397448E-01
 R22,W22 =  2.72474487139158E+00, 9.17517095361369E-02
 
-@njit(cache=True,fastmath=True, error_model='numpy', nogil=True, inline='always')
+# MLX compatible - no JIT
 def Root2(X,n, roots, weights):
 
   if X < 3.E-7:
@@ -978,7 +978,7 @@ R13 = 1.90163509193487E-01
 R23,W23 = 1.78449274854325E+00, 1.77231492083829E-01
 R33,W33 = 5.52534374226326E+00, 5.11156880411248E-03
 
-@njit(cache=True,fastmath=True, error_model='numpy', nogil=True)
+# MLX compatible - no JIT
 def Root3(X,n,roots, weights):
 
   if X < 3.0E-7:
@@ -1232,7 +1232,7 @@ R24,W24 = 1.33909728812636E+00, 2.34479815323517E-01
 R34,W34 = 3.92696350135829E+00, 1.92704402415764E-02
 R44,W44 = 8.58863568901199E+00, 2.25229076750736E-04
 
-@njit(cache=True,fastmath=True, error_model='numpy', nogil=True)
+# MLX compatible - no JIT
 def Root4(X,n,roots, weights):
 
     if X <= 3.0E-7:
@@ -1571,7 +1571,7 @@ R35,W35 = 3.08593744371754E+00, 3.82231610015404E-02
 R45,W45 = 6.41472973366203E+00, 1.51614186862443E-03
 R55,W55 = 1.18071894899717E+01, 8.62130526143657E-06
 
-@njit(cache=True,fastmath=True, error_model='numpy', nogil=True)
+# MLX compatible - no JIT
 def Root5(X,n, roots, weights):
     if X < 3.0E-7:
         roots0 = 2.26659266316985E-02 -2.15865967920897E-03 *X

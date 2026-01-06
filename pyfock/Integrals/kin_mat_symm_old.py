@@ -1,12 +1,12 @@
 import numpy as np
-from numba import njit , prange
+# # # Removed numba import - using pure Python for MLX compatibility
 
 from .integral_helpers import calcS
 
 def kin_mat_symm(basis, slice=None):
     # Here the lists are converted to numpy arrays for better use with Numba.
     # Once these conversions are done we pass these to a Numba decorated
-    # function that uses prange, etc. to calculate the matrix efficiently.
+    # function that uses range, etc. to calculate the matrix efficiently.
 
     # This function calculates the kinetic energy matrix for a given basis object.
     # The basis object holds the information of basis functions like: exponents, coeffs, etc.
@@ -54,7 +54,7 @@ def kin_mat_symm(basis, slice=None):
     
     return T 
 
-@njit(parallel=True, cache=True)
+# MLX compatible - no JIT
 def kin_mat_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, bfs_coeffs, bfs_prim_norms, bfs_expnts, start_row, end_row, start_col, end_col):
     # This function calculates the kinetic energy matrix and uses the symmetry property to only calculate half-ish the elements
     # and get the remaining half by symmetry.
@@ -93,7 +93,7 @@ def kin_mat_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, 
     T = np.zeros(matrix_shape) 
 
 
-    for i in prange(start_row, end_row):
+    for i in range(start_row, end_row):
         I = bfs_coords[i]
         Ni = bfs_contr_prim_norms[i]
         lmni = bfs_lmn[i]
@@ -177,7 +177,7 @@ def kin_mat_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, 
             
     if both_tri_symm:
         #We save time by evaluating only the lower diagonal elements and then use symmetry Ti,j=Tj,i 
-        for i in prange(start_row, end_row):
+        for i in range(start_row, end_row):
             for j in range(start_col, end_col):
                 if j>i:
                     T[i-start_row, j-start_col] = T[j-start_col, i-start_row]

@@ -1,5 +1,5 @@
 import numpy as np
-from numba import njit, prange
+# # Removed numba import - using pure Python for MLX compatibility
 
 from .integral_helpers import innerLoop4c2e
 from .rys_helpers import coulomb_rys
@@ -33,7 +33,7 @@ def conv_2c2e_symm(basis, slice=None):
     """
     # Here the lists are converted to numpy arrays for better use with Numba.
     # Once these conversions are done we pass these to a Numba decorated
-    # function that uses prange, etc. to calculate the 3c2e integrals efficiently.
+    # function that uses range, etc. to calculate the 3c2e integrals efficiently.
     # This function calculates the 3c2e electron-electron ERIs for a given basis object and auxbasis object.
     # The basis object holds the information of basis functions like: exponents, coeffs, etc.
     
@@ -80,7 +80,7 @@ def conv_2c2e_symm(basis, slice=None):
     ints2c2e = conv_2c2e_symm_internal(bfs_coords[0], bfs_contr_prim_norms[0], bfs_lmn[0], bfs_nprim[0], bfs_coeffs, bfs_prim_norms, bfs_expnts, start_row, end_row, start_col, end_col)
     return ints2c2e
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def conv_2c2e_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, bfs_coeffs, bfs_prim_norms, bfs_expnts, start_row, end_row, start_col, end_col):
     # Two centered two electron integrals by hacking the 4c2e routines based on rys quadrature.
     # Based on Rys Quadrature from https://github.com/rpmuller/MolecularIntegrals.jl
@@ -121,7 +121,7 @@ def conv_2c2e_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim
     djk, dlk = 1.0, 1.0
     Njk, Nlk = 1.0, 1.0
     #Loop pver BFs
-    for i in prange(start_row, end_row): #A
+    for i in range(start_row, end_row): #A
         I = bfs_coords[i]
         # J = I
         # IJ = I #I - J
@@ -191,8 +191,8 @@ def conv_2c2e_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim
                     
     if tri_symm:
         #We save time by evaluating only the lower diagonal elements and then use symmetry Si,j=Sj,i 
-        for i in prange(start_row, end_row):
-            for j in prange(start_col, end_col):
+        for i in range(start_row, end_row):
+            for j in range(start_col, end_col):
                 if j>i:
                     twoC2E[i-start_row, j-start_col] = twoC2E[j-start_col, i-start_row]                        
                                    

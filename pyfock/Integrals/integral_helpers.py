@@ -1,13 +1,21 @@
 from scipy.special import factorial, factorial2, binom, hyp1f1, gammainc, gamma # , comb
 import numpy as np
-from numba import njit 
 import math
+
+# Try to import MLX for Apple Silicon acceleration
+try:
+    import mlx.core as mx
+    MLX_AVAILABLE = True
+except ImportError:
+    MLX_AVAILABLE = False
+    mx = None
+
 #
 #
 #  .d8888b.                            Y88b   d88P       8888888b.           8888888888                888      
 # d88P  Y88b                            Y88b d88P        888   Y88b          888                       888      
 # 888    888                             Y88o88P         888    888          888                       888      
-# 888        888d888 888  888 .d8888b     Y888P          888   d88P 888  888 8888888  .d88b.   .d8888b 888  888 
+# 888        888d888 888  888 .d8888b     Y888P          888   d88P 888  888 8888888  .d88b.   .d8888P 888  888 
 # 888        888P"   888  888 88K         d888b          8888888P"  888  888 888     d88""88b d88P"    888 .88P 
 # 888    888 888     888  888 "Y8888b.   d88888b  888888 888        888  888 888     888  888 888      888888K  
 # Y88b  d88P 888     Y88b 888      X88  d88P Y88b        888        Y88b 888 888     Y88..88P Y88b.    888 "88b 
@@ -16,23 +24,23 @@ import math
 #                    Y8b d88P                                       Y8b d88P                                    
 #                     "Y88P"                                         "Y88P"                                       
 
-@njit(cache=True, fastmath=True, error_model="numpy")
+
 def fac(n):
     if n <= 0:
         return 1
     else:
         return n * doublefactorial(n-1)
 
-@njit(cache=True, fastmath=True, error_model="numpy")
+
 def fastFactorial_old(n):
     # loop is working the best
     if n<= 1:
         return 1
     else:
-        factorial = 1
+        factorial_val = 1
         for i in range(2, n+1):
-            factorial *= i
-        return factorial
+            factorial_val *= i
+        return factorial_val
     
 LOOKUP_TABLE = np.array([
     1, 1, 2, 6, 24, 120, 720, 5040, 40320,
@@ -41,7 +49,7 @@ LOOKUP_TABLE = np.array([
     20922789888000, 355687428096000, 6402373705728000,
     121645100408832000, 2432902008176640000], dtype='int64')
 
-@njit(cache=True, fastmath=True, error_model="numpy")
+
 def fastFactorial(n):
     # 2-3x faster than the fastFactorial_old for values less than 21
     if n<= 1:
@@ -49,35 +57,34 @@ def fastFactorial(n):
     elif n<=20:
         return LOOKUP_TABLE[n]
     else:
-        factorial = 1
+        factorial_val = 1
         for i in range(2, n+1):
-            factorial *= i
-        return factorial
+            factorial_val *= i
+        return factorial_val
 
 
-@njit(cache=True, fastmath=True, error_model="numpy")
+
 def comb(x, y):
     if y == 0: 
         return 1
     if x == y: 
         return 1
-    binom = fastFactorial(x) // fastFactorial(y) // fastFactorial(x - y)
-    return binom
+    binom_val = fastFactorial(x) // fastFactorial(y) // fastFactorial(x - y)
+    return binom_val
 
 # More compilation time
-# @njit(cache=True, fastmath=True, error_model="numpy")
 # def comb(x, y):
 #     return binom(float(x), float(y))
 
-@njit(cache=True, fastmath=True, error_model="numpy")
+
 def doublefactorial_old(n):
-# Double Factorial Implementation based on recursion (not numba friendly)
+# Double Factorial Implementation based on recursion
      if n <= 0:
          return 1
      else:
          return n * doublefactorial(n-2)
 
-@njit(cache=True, fastmath=True, error_model="numpy")
+
 def doublefactorial(n):
     if n <= 0:
         return 1
@@ -88,7 +95,7 @@ def doublefactorial(n):
         return result
         
 
-@njit(cache=True, fastmath=True, error_model="numpy")   
+  
 def c2k(k,la,lb,PA,PB):
     temp = 0.0
     for i in range(la+1):
@@ -103,7 +110,7 @@ def c2k(k,la,lb,PA,PB):
                 temp +=  factor1*comb(lb,j)*factor2*PB**(lb-j)
     return temp
 
-@njit(cache=True, fastmath=True, error_model="numpy")
+
 def calcS(la,lb,gamma,PA,PB):
     temp = 0.0
     fac1 = np.sqrt(np.pi/gamma)
@@ -112,13 +119,12 @@ def calcS(la,lb,gamma,PA,PB):
         temp +=  c2k(2*k,la,lb,PA,PB)*fac1*doublefactorial(2*k-1)/(fac2)**k
     return temp
 
-@njit(cache=True, fastmath=True, error_model="numpy")
+
 def vlriPartial(Ci, l,r,i):
     return (-1)**l*((-1)**i*fastFactorial(l)*Ci**(l-2*r-2*i)/(fastFactorial(r)*fastFactorial(i)*fastFactorial(l-2*r-2*i)))
 
 
 
-@njit(cache=True, fastmath=True, error_model="numpy")
 def Fboys_old(v,x):
     # From: https://pubs.acs.org/doi/full/10.1021/acs.jchemed.8b00255
     #from scipy.special import gammainc, gamma
@@ -134,17 +140,17 @@ def Fboys_old(v,x):
 # McMurchie-Davidson project:
 # https://github.com/jjgoings/McMurchie-Davidson
 # Licensed under the BSD-3-Clause license
-@njit(cache=True)
+
 def Fboys_jjgoings(v,x):
     #from scipy.special import hyp1f1
     F = hyp1f1(v+0.5,v+1.5,-x)/(2.0*v+1.0)
     return F
 
-@njit(cache=True, fastmath=True, error_model="numpy")
+
 def theta(l,la,lb,PA,PB,gamma_,r):
     return c2k(l,la,lb,PA,PB)*fastFactorial(l)*(gamma_**(r-l))/(fastFactorial(r)*fastFactorial(l-2*r))
 
-@njit(cache=True, fastmath=True, error_model="numpy")
+
 def g(lp,lq,rp,rq,i,la,lb,lc,ld,gammaP,gammaQ,PA,PB,QC,QD,PQ,delta):
         temp = ((-1)**lp)*theta(lp,la,lb,PA,PB,gammaP,rp)*theta(lq,lc,ld,QC,QD,gammaQ,rq)
         numerator = temp*((-1)**i)*((2*delta)**(2*(rp+rq)))*fastFactorial(lp+lq-2*rp-2*rq)*(delta**i)*(PQ**(lp+lq-2*(rp+rq+i)))
@@ -152,7 +158,7 @@ def g(lp,lq,rp,rq,i,la,lb,lc,ld,gammaP,gammaQ,PA,PB,QC,QD,PQ,delta):
         # print(numerator/temp)
         return (numerator/denominator)
 
-@njit(cache=True, fastmath=True, error_model="numpy")
+
 def innerLoop4c2e(la,lb,lc,ld,ma,mb,mc,md,na,nb,nc,nd,gammaP,gammaQ,PI,PJ,QK,QL,PQ,PQsqBy4delta,delta):
     sum1 = 0.0
     for lp in range(0,la+lb+1):
@@ -182,7 +188,7 @@ def innerLoop4c2e(la,lb,lc,ld,ma,mb,mc,md,na,nb,nc,nd,gammaP,gammaQ,PI,PJ,QK,QL,
                         sum1 = sum1 + gx*sum2
     return sum1
 
-@njit(cache=False, fastmath=True, error_model="numpy")
+
 def hermite_gauss_coeff(i,j,t,Qx,a,b,p=None,q=None): 
     ''' Recursive definition of Hermite Gaussian coefficients.
         Returns a float.
@@ -222,7 +228,7 @@ def hermite_gauss_coeff(i,j,t,Qx,a,b,p=None,q=None):
     
 
     
-@njit(cache=False, fastmath=True, error_model="numpy")
+
 def aux_hermite_int(t,u,v,n,p,PCx,PCy,PCz,RPC,T=None,boys=None,n_min=None):
     ''' Returns the Coulomb auxiliary Hermite integrals 
         Returns a float.
@@ -279,21 +285,18 @@ def aux_hermite_int(t,u,v,n,p,PCx,PCy,PCz,RPC,T=None,boys=None,n_min=None):
 # The repo has the BSD-3 license.
 # This implementation is faster and it should help provide upto
 # 10-40 percent speed up.
-# Another advantage of this implementation is that it can be cached by Numba, since it is not dependent on the functions
-# from numba scipy package. 
-import math
 from .taylor import taylor
 
 TAYLOR_THRESHOLD = -25.0
 
 
-@njit(cache=True, fastmath=True, error_model="numpy")
+
 def hyp0minus(x):
     z = math.sqrt(-x)
     return 0.5 * math.erf(z) * math.sqrt(math.pi) / z
 
 
-@njit(cache=True, fastmath=True, error_model="numpy")
+
 def hyp1f1_(m, z):
     # print('here')
     if z < TAYLOR_THRESHOLD:
@@ -303,6 +306,6 @@ def hyp1f1_(m, z):
         return taylor(m, z)
 
 
-@njit(cache=True, fastmath=True, error_model="numpy")
+
 def Fboys(m, T):
     return hyp1f1_(m, -T) / (2*m+1)

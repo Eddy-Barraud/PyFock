@@ -1,5 +1,10 @@
 import numpy as np
-import pylibxc
+try:
+    import pylibxc
+    PYLIBXC_AVAILABLE = True
+except ImportError:
+    PYLIBXC_AVAILABLE = False
+    pylibxc = None
 
 # https://th.fhi-berlin.mpg.de/th/Meetings/DFT-workshop-Berlin2011/presentations/2011-07-13_DellaSala_Fabio.pdf
 # http://alps.comp-phys.org/mediawiki/images/8/83/Lecture2.pdf

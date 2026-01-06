@@ -1,5 +1,5 @@
 import numpy as np
-from numba import njit, prange
+# # Removed numba import - using pure Python for MLX compatibility
 
 from .integral_helpers import innerLoop4c2e
 
@@ -78,7 +78,7 @@ def conv_3c2e_symm(basis, auxbasis, slice=None):
     """
     # Here the lists are converted to numpy arrays for better use with Numba.
     # Once these conversions are done we pass these to a Numba decorated
-    # function that uses prange, etc. to calculate the 3c2e integrals efficiently.
+    # function that uses range, etc. to calculate the 3c2e integrals efficiently.
     # This function calculates the 3c2e electron-electron ERIs for a given basis object and auxbasis object.
     # The basis object holds the information of basis functions like: exponents, coeffs, etc.
     
@@ -144,7 +144,7 @@ def conv_3c2e_symm(basis, auxbasis, slice=None):
     ints3c2e = conv_3c2e_symm_internal(bfs_coords[0], bfs_contr_prim_norms[0], bfs_lmn[0], bfs_nprim[0], bfs_coeffs, bfs_prim_norms, bfs_expnts,aux_bfs_coords[0], aux_bfs_contr_prim_norms[0], aux_bfs_lmn[0], aux_bfs_nprim[0], aux_bfs_coeffs, aux_bfs_prim_norms, aux_bfs_expnts,indx_startA, indx_endA, indx_startB, indx_endB, indx_startC, indx_endC)
     return ints3c2e
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def conv_3c2e_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, bfs_coeffs, bfs_prim_norms, bfs_expnts,aux_bfs_coords, aux_bfs_contr_prim_norms, aux_bfs_lmn, aux_bfs_nprim, aux_bfs_coeffs, aux_bfs_prim_norms, aux_bfs_expnts, indx_startA, indx_endA, indx_startB, indx_endB, indx_startC, indx_endC):
     # This function calculates the three-centered two electron integrals for density fitting
     # The basis object holds the information of basis functions like: exponents, coeffs, etc.
@@ -180,14 +180,14 @@ def conv_3c2e_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim
     alphalk = 0.0
 
     #Loop pver BFs
-    for i in prange(indx_startA, indx_endA): #A
+    for i in range(indx_startA, indx_endA): #A
         I = bfs_coords[i]
         Ni = bfs_contr_prim_norms[i]
         lmni = bfs_lmn[i]
         la, ma, na = lmni
         nprimi = bfs_nprim[i]
         
-        for j in prange(indx_startB, indx_endB): #B
+        for j in range(indx_startB, indx_endB): #B
             if (tri_symm and j<=i) or no_symm:
                 J = bfs_coords[j]
                 IJ = I - J
@@ -198,7 +198,7 @@ def conv_3c2e_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim
                 tempcoeff1 = Ni*Nj
                 nprimj = bfs_nprim[j]
                 
-                for k in prange(indx_startC, indx_endC): #C
+                for k in range(indx_startC, indx_endC): #C
                     K = aux_bfs_coords[k]
                     Nk = aux_bfs_contr_prim_norms[k]
                     lmnk = aux_bfs_lmn[k]
@@ -275,8 +275,8 @@ def conv_3c2e_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim
                                     
     if tri_symm:
         #We save time by evaluating only the lower diagonal elements and then use symmetry Si,j=Sj,i 
-        for i in prange(indx_startA, indx_endA):
-            for j in prange(indx_startB, indx_endB):
+        for i in range(indx_startA, indx_endA):
+            for j in range(indx_startB, indx_endB):
                 if j<=i:
                     threeC2E[j-indx_startB, i-indx_startA, :] = threeC2E[i-indx_startA, j-indx_startB, :]       
                             

@@ -1,14 +1,20 @@
+# Try to import MLX for Apple Silicon acceleration
 try:
-    import cupy as cp
-    from cupy import fuse
-except Exception as e:
-    # Handle the case when Cupy is not installed
-    cp = None
-    # Define a dummy fuse decorator for CPU version
-    def fuse(kernel_name):
-        def decorator(func):
-            return func 
-        return decorator
+    import mlx.core as mx
+    MLX_AVAILABLE = True
+except ImportError:
+    MLX_AVAILABLE = False
+    mx = None
+
+# CuPy has been removed - using MLX/NumPy instead
+cp = None
+
+# Define a dummy fuse decorator for CPU version
+def fuse(kernel_name):
+    def decorator(func):
+        return func 
+    return decorator
+
 import numpy as np
 from pyfock.XC import lda_x
 
@@ -133,7 +139,7 @@ def pbe_x_temp(rho, sigma):
     vsigmax = exunifdFx * divkf / (2 * norm_dn)
     # vsigmax = np.divide(exunifdFx * divkf, 2 * norm_dn,
     #                     out=np.zeros_like(norm_dn), where=(norm_dn > 0))
-    return sx * rho, np.array([vx]), vsigmax
+    return sx * rho, vx, vsigmax
 
 @fuse(kernel_name='pbe_x_temp_cupy')
 def pbe_x_temp_cupy(rho, sigma):
@@ -156,18 +162,18 @@ def pbe_x_temp_cupy(rho, sigma):
 
     Parameters
     ----------
-    rho : cp.ndarray
+    rho : np.ndarray
         Electron density array (CuPy).
-    sigma : cp.ndarray
+    sigma : np.ndarray
         Gradient of the electron density, defined as ∇ρ·∇ρ (CuPy).
 
     Returns
     -------
-    gex : cp.ndarray
+    gex : np.ndarray
         Gradient correction to the exchange energy density.
-    gvx : cp.ndarray
+    gvx : np.ndarray
         Correction to the exchange potential (derivative with respect to density).
-    vsigmax : cp.ndarray
+    vsigmax : np.ndarray
         Derivative of the exchange energy with respect to σ.
     """
 
@@ -175,13 +181,13 @@ def pbe_x_temp_cupy(rho, sigma):
     mu = 0.2195149727645171
     kappa = 0.804
 
-    norm_dn = cp.sqrt(sigma)
-    kf = (3 * cp.pi**2 * rho)**(1 / 3)
+    norm_dn = np.sqrt(sigma)
+    kf = (3 * np.pi**2 * rho)**(1 / 3)
     divkf = 1 / kf
     s = norm_dn * divkf / (2 * rho)
     f1 = 1 + mu * s**2 / kappa
     Fx = kappa - kappa / f1
-    exunif = -3 * kf / (4 * cp.pi)
+    exunif = -3 * kf / (4 * np.pi)
     # In Fx a '1 + ' is missing, since n * exunif is the Slater exchange that is added later
     sx = exunif * Fx
 
@@ -216,25 +222,25 @@ def gga_x_pbe_cupy(rho, sigma):
 
     Parameters
     ----------
-    rho : cp.ndarray
+    rho : np.ndarray
         Electron density array (CuPy).
-    sigma : cp.ndarray
+    sigma : np.ndarray
         Gradient of the electron density, defined as ∇ρ·∇ρ (CuPy).
 
     Returns
     -------
-    ex : cp.ndarray
+    ex : np.ndarray
         Exchange energy density.
-    vx : cp.ndarray
+    vx : np.ndarray
         Functional derivative of the exchange energy with respect to density.
-    vsigma : cp.ndarray
+    vsigma : np.ndarray
         Functional derivative of the exchange energy with respect to the density gradient term σ.
     """
 
     mu = 0.2195149727645171 # Functional parameter
 
     # rho_cutoff = 1e-12  # define rho_cutoff constant
-    rho = cp.maximum(rho, 1e-12)
+    rho = np.maximum(rho, 1e-12)
 
     ex, vx = lda_x(rho)
     gex, gvx, vsigmax = pbe_x_temp_cupy(rho, sigma)
@@ -243,8 +249,8 @@ def gga_x_pbe_cupy(rho, sigma):
     vx += gvx
     vsigma = 0.5*vsigmax
 
-    vsigma[cp.isnan(vsigma)] = 0
-    vx[cp.isnan(vx)] = 0
-    ex[cp.isnan(ex)] = 0
+    vsigma[np.isnan(vsigma)] = 0
+    vx[np.isnan(vx)] = 0
+    ex[np.isnan(ex)] = 0
 
     return ex, vx, vsigma

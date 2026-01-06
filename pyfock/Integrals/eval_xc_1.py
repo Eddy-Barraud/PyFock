@@ -1,6 +1,13 @@
 import numpy as np
 import numexpr
-import pylibxc
+
+try:
+    import pylibxc
+    PYLIBXC_AVAILABLE = True
+except ImportError:
+    PYLIBXC_AVAILABLE = False
+    pylibxc = None
+
 from timeit import default_timer as timer
 from pyfock import Integrals
 from opt_einsum import contract

@@ -1,14 +1,20 @@
+# Try to import MLX for Apple Silicon acceleration
 try:
-    import cupy as cp
-    from cupy import fuse
-except Exception as e:
-    # Handle the case when Cupy is not installed
-    cp = None
-    # Define a dummy fuse decorator for CPU version
-    def fuse(kernel_name):
-        def decorator(func):
-            return func 
-        return decorator
+    import mlx.core as mx
+    MLX_AVAILABLE = True
+except ImportError:
+    MLX_AVAILABLE = False
+    mx = None
+
+# CuPy has been removed - using MLX/NumPy instead
+cp = None
+
+# Define a dummy fuse decorator for CPU version
+def fuse(kernel_name):
+    def decorator(func):
+        return func 
+    return decorator
+
 import numpy as np
 
 # The following implementation of the Perdew-Wang parametrization of the correlation functional
@@ -140,13 +146,13 @@ def lda_c_pw_cupy_(rho):
     b3 = 1.6382 
     b4 = 0.49294
 
-    rs = (3 / (4 * cp.pi * rho))**(1 / 3)
-    rs12 = cp.sqrt(rs)
+    rs = (3 / (4 * np.pi * rho))**(1 / 3)
+    rs12 = np.sqrt(rs)
     rs32 = rs * rs12
     rs2 = rs**2
 
     om = 2 * A * (b1 * rs12 + b2 * rs + b3 * rs32 + b4 * rs2)
-    olog = cp.log(1 + 1 / om)
+    olog = np.log(1 + 1 / om)
     ec = -2 * A * (1 + a1 * rs) * olog
 
     dom = 2 * A * (0.5 * b1 * rs12 + b2 * rs + 1.5 * b3 * rs32 + 2 * b4 * rs2)

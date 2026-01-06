@@ -1,6 +1,6 @@
 import numpy as np
-from numba import njit, prange, guvectorize, float64, int16, int32, config, threading_layer, get_thread_id, get_num_threads, get_parallel_chunksize
-from numba import cuda
+# # Removed numba import - using pure Python for MLX compatibility
+# # Removed numba import - using pure Python for MLX compatibility
 
 try:
     import cupy as cp
@@ -49,14 +49,14 @@ def eri_4c2e_diag(basis):
 # Reference: https://github.com/numba/numba/issues/8007#issuecomment-1113187684
 parallel_options = {
     'comprehension': False,  # parallel comprehension
-    'prange':        True,  # parallel for-loop
+    'range':        True,  # parallel for-loop
     'numpy':         True,  # parallel numpy calls
     'reduction':     False,  # parallel reduce calls
     'setitem':       True,  # parallel setitem
     'stencil':       True,  # parallel stencils
     'fusion':        True,  # enable fusion or not
 }
-@njit(parallel=parallel_options, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def eri_4c2e_diag_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, bfs_coeffs, bfs_prim_norms, bfs_expnts):
     # This function calculates the "diagonal" elements of the 4c2e ERI array
     # Used to implement Schwarz screening
@@ -70,7 +70,7 @@ def eri_4c2e_diag_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim,
     twopisq = 19.739208802178716  #2*PI^2
 
     #Loop pver BFs
-    for i in prange(0, nao): #A
+    for i in range(0, nao): #A
         I = bfs_coords[i]
         Ni = bfs_contr_prim_norms[i]
         lmni = bfs_lmn[i]
@@ -80,7 +80,7 @@ def eri_4c2e_diag_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim,
         K = I
         lc, mc, nc = lmni
         
-        for j in prange(0, i + 1): #B
+        for j in range(0, i + 1): #B
             J = bfs_coords[j]
             IJ = I - J
             IJsq = np.sum(IJ**2)
@@ -147,7 +147,7 @@ def eri_4c2e_diag_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim,
         
     return fourC2E_diag
 
-@njit(parallel=parallel_options, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def rys_eri_4c2e_diag_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, bfs_coeffs, bfs_prim_norms, bfs_expnts):
     # This function calculates the "diagonal" elements of the 4c2e ERI array
     # Used to implement Schwarz screening
@@ -161,7 +161,7 @@ def rys_eri_4c2e_diag_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_np
     twopisq = 19.739208802178716  #2*PI^2
 
     #Loop pver BFs
-    for i in prange(0, nao): #A
+    for i in range(0, nao): #A
         I = bfs_coords[i]
         Ni = bfs_contr_prim_norms[i]
         lmni = bfs_lmn[i]
@@ -171,7 +171,7 @@ def rys_eri_4c2e_diag_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_np
         K = I
         lc, mc, nc = lmni
         
-        for j in prange(0, i + 1): #B
+        for j in range(0, i + 1): #B
             J = bfs_coords[j]
             IJ = I - J
             L = J
@@ -255,7 +255,7 @@ def rys_eri_4c2e_diag_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_np
         
     return fourC2E_diag
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def calc_indices_3c2e_schwarz(eri_4c2e_diag, ints2c2e, nao, naux, threshold):
     # This function will return a numpy array of the same size as ints3c2e array (nao*nao*naux)
     # The array will have a value of 1 where there is a significant contribution and 0 otherwise.
@@ -264,12 +264,12 @@ def calc_indices_3c2e_schwarz(eri_4c2e_diag, ints2c2e, nao, naux, threshold):
     # Loop over the lower-triangular ints3c2e array
     for i in range(nao):
         for j in range(i+1):
-            for k in prange(naux):
+            for k in range(naux):
                 if np.sqrt(eri_4c2e_diag[i,j])*np.sqrt(ints2c2e[k,k])>threshold:
                     indices[i,j,k] = 1
     return indices
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def calc_indices_3c2e_schwarz2(sqrt_ints4c2e_diag, sqrt_diag_ints2c2e, chunk_size, nao, naux, istart, jstart, kstart, threshold, strict_schwarz):
     # This is a variant of the previous function 'calc_indices_3c2e_schwarz'. Instead of returning arrays of 1s and 0s
     # which are then needed to be processed to get the indices of the contributing triplets.
@@ -280,15 +280,15 @@ def calc_indices_3c2e_schwarz2(sqrt_ints4c2e_diag, sqrt_diag_ints2c2e, chunk_siz
     indicesC = np.zeros((chunk_size), dtype=np.uint16)
     # Loop over the lower-triangular ints3c2e array
     count = 0
-    for i in prange(istart, nao):
-        for j in prange(jstart, i+1):
+    for i in range(istart, nao):
+        for j in range(jstart, i+1):
             sqrt_ij = sqrt_ints4c2e_diag[i,j]
             if j==i:
                 jstart = 0
             if strict_schwarz:
                 if sqrt_ij*sqrt_ij<1e-13:
                     continue
-            for k in prange(kstart, naux):
+            for k in range(kstart, naux):
                 if k==naux-1:
                     # jstart = 0
                     kstart = 0
@@ -303,7 +303,7 @@ def calc_indices_3c2e_schwarz2(sqrt_ints4c2e_diag, sqrt_diag_ints2c2e, chunk_siz
                 
     return indicesA, indicesB, indicesC, [i,j,k], count
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def calc_indices_3c2e_schwarz_fine(sqrt_ints4c2e_diag, sqrt_diag_ints2c2e, chunk_size, nao, naux, istart, jstart, kstart, threshold, strict_schwarz, auxbfs_lm):
     # This is a variant of the previous function 'calc_indices_3c2e_schwarz'. Instead of returning arrays of 1s and 0s
     # which are then needed to be processed to get the indices of the contributing triplets.
@@ -314,10 +314,10 @@ def calc_indices_3c2e_schwarz_fine(sqrt_ints4c2e_diag, sqrt_diag_ints2c2e, chunk
     indicesC = np.zeros((chunk_size), dtype=np.uint16)
     # Loop over the lower-triangular ints3c2e array
     count = 0
-    for i in prange(istart, nao):
+    for i in range(istart, nao):
         # coord_i = bfs_coords[i]
         # cutoff_i = bfs_radius_cutoff[i]
-        for j in prange(jstart, i+1):
+        for j in range(jstart, i+1):
             sqrt_ij = sqrt_ints4c2e_diag[i,j]
             if j==i:
                 jstart = 0
@@ -325,7 +325,7 @@ def calc_indices_3c2e_schwarz_fine(sqrt_ints4c2e_diag, sqrt_diag_ints2c2e, chunk
             if strict_schwarz:
                 if sqrt_ij*sqrt_ij<1e-13:
                     continue    
-            for k in prange(kstart, naux):
+            for k in range(kstart, naux):
                 if k==naux-1:
                     # jstart = 0
                     kstart = 0
@@ -373,13 +373,13 @@ def calc_indices_3c2e_schwarz_fine(sqrt_ints4c2e_diag, sqrt_diag_ints2c2e, chunk
                     return indicesA, indicesB, indicesC, [i,j,k], count
     return indicesA, indicesB, indicesC, [i,j,k], count
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def calc_offsets_3c2e_schwarz(sqrt_ints4c2e_diag, sqrt_diag_ints2c2e, threshold, strict_schwarz, auxbfs_lm, ntri, naux, tril_indicesA, tril_indicesB):
     # Calculate the offsets for 3c2e integral evluations
     offsets = np.zeros((ntri+1), dtype=np.uint16)
     offsets[0] = 0
     # Loop over the lower-triangular ints3c2e array
-    for ij in prange(ntri):
+    for ij in range(ntri):
         i = tril_indicesA[ij]
         j = tril_indicesB[ij]
         sqrt_ij = sqrt_ints4c2e_diag[i,j] 
@@ -412,7 +412,7 @@ def calc_offsets_3c2e_schwarz(sqrt_ints4c2e_diag, sqrt_diag_ints2c2e, threshold,
         offsets[ij+1] = count 
     return offsets
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def calc_indices_3c2e_schwarz3(sqrt_ints4c2e_diag, sqrt_diag_ints2c2e, chunk_size, nao, naux, istart, jstart, kstart, threshold):
     # This is a variant of the previous function 'calc_indices_3c2e_schwarz'. Instead of returning arrays of 1s and 0s
     # which are then needed to be processed to get the indices of the contributing triplets.
@@ -424,12 +424,12 @@ def calc_indices_3c2e_schwarz3(sqrt_ints4c2e_diag, sqrt_diag_ints2c2e, chunk_siz
     # Loop over the lower-triangular ints3c2e array
     count = 0
     indx_offset = 0
-    for i in prange(istart, nao):
-        for j in prange(jstart, i+1):
+    for i in range(istart, nao):
+        for j in range(jstart, i+1):
             sqrt_ij = sqrt_ints4c2e_diag[i,j]
             if j==i:
                 jstart = 0
-            for k in prange(kstart, naux):
+            for k in range(kstart, naux):
                 if k==naux-1:
                     # jstart = 0
                     kstart = 0
@@ -443,20 +443,20 @@ def calc_indices_3c2e_schwarz3(sqrt_ints4c2e_diag, sqrt_diag_ints2c2e, chunk_siz
                     return offset, indicesB, indicesC, [i,j,k], count
     return offset, indicesB, indicesC, [i,j,k], count
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def calc_count_3c2e_schwarz(sqrt_ints4c2e_diag, sqrt_diag_ints2c2e, nao, naux, threshold):
     # Calculates the total no. of significant 3c2e triplets after Schwarz screening
     # Loop over the lower-triangular ints3c2e array
     count = 0
-    for i in prange(0, nao):
-        for j in prange(0, i+1):
+    for i in range(0, nao):
+        for j in range(0, i+1):
             sqrt_ij = sqrt_ints4c2e_diag[i,j]
-            for k in prange(0, naux):
+            for k in range(0, naux):
                 if sqrt_ij*sqrt_diag_ints2c2e[k]>threshold:
                     count += 1
     return count
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def calc_indices_4c2e_schwarz(sqrt_ints4c2e_diag, chunk_size, nao, istart, jstart, kstart, lstart, threshold):
     # This is a variant of the previous function 'calc_indices_3c2e_schwarz'. Instead of returning arrays of 1s and 0s
     # which are then needed to be processed to get the indices of the contributing triplets.
@@ -468,7 +468,7 @@ def calc_indices_4c2e_schwarz(sqrt_ints4c2e_diag, chunk_size, nao, istart, jstar
     indicesD = np.zeros((chunk_size), dtype=np.uint16)
     # Loop over the lower-triangular ints3c2e array
     count = 0
-    for i in prange(istart, nao):
+    for i in range(istart, nao):
         for j in range(jstart, i+1):
             if i<j:
                 triangle2ij = (j)*(j+1)/2+i
@@ -501,7 +501,7 @@ def calc_indices_4c2e_schwarz(sqrt_ints4c2e_diag, chunk_size, nao, istart, jstar
                         return indicesA, indicesB, indicesC, indicesD, [i,j,k,l], count
     return indicesA, indicesB, indicesC, indicesD, [i,j,k], count
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def calc_indices_3c2e_schwarz2_test(eri_4c2e_diag, ints2c2e, chunk_size, nao, naux, istart, jstart, kstart, threshold):
     # This is a variant of the previous function 'calc_indices_3c2e_schwarz'. Instead of returning arrays of 1s and 0s
     # which are then needed to be processed to get the indices of the contributing triplets.
@@ -512,7 +512,7 @@ def calc_indices_3c2e_schwarz2_test(eri_4c2e_diag, ints2c2e, chunk_size, nao, na
     indicesC = np.zeros((chunk_size), dtype=np.uint16)
     # Loop over k first
     count = 0
-    for k in prange(kstart, naux):
+    for k in range(kstart, naux):
         for i in range(istart, nao):
             jstart = i if i == istart else 0
             for j in range(jstart, i+1):
@@ -527,7 +527,7 @@ def calc_indices_3c2e_schwarz2_test(eri_4c2e_diag, ints2c2e, chunk_size, nao, na
             kstart = 0 # reset kstart for the next j loop
     return indicesA, indicesB, indicesC, [i,j,k], count
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def calc_indices_3c2e_schwarz_shells(eri_4c2e_diag, ints2c2e, chunk_size, nao, naux, istart, jstart, kstart, shell_indices, aux_shell_indices, threshold):
     # This is a variant of the previous function 'calc_indices_3c2e_schwarz2'. 
     # Instead of calculating the indices which yield non zero contributions, 
@@ -549,7 +549,7 @@ def calc_indices_3c2e_schwarz_shells(eri_4c2e_diag, ints2c2e, chunk_size, nao, n
             jshell = shell_indices[jbf]
             if jbf==ibf:
                 jstart = 0
-            for kbf in prange(kstart, naux):
+            for kbf in range(kstart, naux):
                 kshell = aux_shell_indices[kbf]
                 if count>0 and (ishell==ishell_previous and jshell==jshell_previous and kshell==kshell_previous):
                     # print(ishell, ishell_previous)
@@ -938,7 +938,7 @@ def rys_3c2e_tri_schwarz_sparse_algo9(basis, auxbasis, offset, indicesB, indices
     return ints3c2e
 
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def rys_3c2e_tri_schwarz_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, bfs_coeffs, bfs_prim_norms, bfs_expnts,aux_bfs_coords, aux_bfs_contr_prim_norms, aux_bfs_lmn, aux_bfs_nprim, aux_bfs_coeffs, aux_bfs_prim_norms, aux_bfs_expnts, indicesA, indicesB, indicesC, nao, naux):
     # Calculates 3c2e integrals based on a provided list of significant triplets determined using Schwarz inequality
     # It is assumed that the provided list was made with triangular int3c2e in mind
@@ -959,7 +959,7 @@ def rys_3c2e_tri_schwarz_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs
     # (https://stackoverflow.com/questions/70339388/using-numba-with-np-concatenate-is-not-efficient-in-parallel/70342014#70342014)
     
     #Loop over BFs
-    for itemp in prange(ntriplets): 
+    for itemp in range(ntriplets): 
         i = indicesA[itemp]
         j = indicesB[itemp]
         k = indicesC[itemp]
@@ -1129,7 +1129,7 @@ def rys_3c2e_tri_schwarz_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs
         
     return threeC2E
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy", nogil=True, boundscheck=False)
+# MLX compatible - no JIT
 def rys_3c2e_tri_schwarz_sparse_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, bfs_coeffs, bfs_prim_norms, bfs_expnts,aux_bfs_coords, aux_bfs_contr_prim_norms, aux_bfs_lmn, aux_bfs_nprim, aux_bfs_coeffs, aux_bfs_prim_norms, aux_bfs_expnts, indicesA, indicesB, indicesC, nao, naux, IJsq_arr, shell_indices, aux_shell_indices):
     # Calculates 3c2e integrals based on a provided list of significant triplets determined using Schwarz inequality
     # It is assumed that the provided list was made with triangular int3c2e in mind
@@ -1169,7 +1169,7 @@ def rys_3c2e_tri_schwarz_sparse_internal(bfs_coords, bfs_contr_prim_norms, bfs_l
     
 
     #Loop over BFs
-    for itemp in prange(ntriplets):
+    for itemp in range(ntriplets):
         # id_thrd = get_thread_id()
 
         
@@ -1354,7 +1354,7 @@ def rys_3c2e_tri_schwarz_sparse_internal(bfs_coords, bfs_contr_prim_norms, bfs_l
 
     return threeC2E
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy", nogil=True, boundscheck=False)
+# MLX compatible - no JIT
 def rys_3c2e_tri_schwarz_sparse_algo10_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, bfs_coeffs, bfs_prim_norms, bfs_expnts,aux_bfs_coords, aux_bfs_contr_prim_norms, aux_bfs_lmn, aux_bfs_nprim, aux_bfs_coeffs, aux_bfs_prim_norms, aux_bfs_expnts, indicesA, indicesB, offsets, nao, naux, IJsq_arr, shell_indices, aux_shell_indices, sqrt_ints4c2e_diag, sqrt_diag_ints2c2e, threshold, strict_schwarz, nsignificant):
     # Calculates 3c2e integrals based on a provided list of significant triplets determined using Schwarz inequality
     # It is assumed that the provided list was made with triangular int3c2e in mind
@@ -1393,7 +1393,7 @@ def rys_3c2e_tri_schwarz_sparse_algo10_internal(bfs_coords, bfs_contr_prim_norms
     
 
     #Loop over BFs
-    for itemp in prange(indicesA.shape[0]):
+    for itemp in range(indicesA.shape[0]):
         # id_thrd = get_thread_id()
         
         i = indicesA[itemp]
@@ -1596,7 +1596,7 @@ def rys_3c2e_tri_schwarz_sparse_algo10_internal(bfs_coords, bfs_contr_prim_norms
 
 
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy", nogil=True, boundscheck=False)
+# MLX compatible - no JIT
 def rys_3c2e_tri_schwarz_sparse_internal_old(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, bfs_coeffs, bfs_prim_norms, bfs_expnts,aux_bfs_coords, aux_bfs_contr_prim_norms, aux_bfs_lmn, aux_bfs_nprim, aux_bfs_coeffs, aux_bfs_prim_norms, aux_bfs_expnts, indicesA, indicesB, indicesC, nao, naux, IJsq_arr, shell_indices, aux_shell_indices):
     # Calculates 3c2e integrals based on a provided list of significant triplets determined using Schwarz inequality
     # It is assumed that the provided list was made with triangular int3c2e in mind
@@ -1648,7 +1648,7 @@ def rys_3c2e_tri_schwarz_sparse_internal_old(bfs_coords, bfs_contr_prim_norms, b
     kshell_previous = -1
 
     #Loop over BFs
-    for itemp in prange(ntriplets):
+    for itemp in range(ntriplets):
         # id_thrd = get_thread_id()
 
         
@@ -1845,7 +1845,7 @@ def rys_3c2e_tri_schwarz_sparse_internal_old(bfs_coords, bfs_contr_prim_norms, b
 
     return threeC2E
 
-@njit(parallel=False, cache=True, fastmath=True, error_model="numpy",nogil=True)
+# MLX compatible - no JIT
 def rys_3c2e_tri_schwarz_sparse_internal2(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, bfs_coeffs, bfs_prim_norms, bfs_expnts,aux_bfs_coords, aux_bfs_contr_prim_norms, aux_bfs_lmn, aux_bfs_nprim, aux_bfs_coeffs, aux_bfs_prim_norms, aux_bfs_expnts, indicesA, indicesB, indicesC, nao, naux, IJsq_arr, ntriplets, threeC2E):
     # Calculates 3c2e integrals based on a provided list of significant triplets determined using Schwarz inequality
     # It is assumed that the provided list was made with triangular int3c2e in mind
@@ -2065,7 +2065,7 @@ def rys_3c2e_tri_schwarz_sparse_internal2(bfs_coords, bfs_contr_prim_norms, bfs_
 
     return None
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy",nogil=True)
+# MLX compatible - no JIT
 def rys_3c2e_tri_schwarz_sparse_algo9_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, bfs_coeffs, bfs_prim_norms, bfs_expnts,aux_bfs_coords, aux_bfs_contr_prim_norms, aux_bfs_lmn, aux_bfs_nprim, aux_bfs_coeffs, aux_bfs_prim_norms, aux_bfs_expnts, offset, indicesB, indicesC, nao, naux, IJsq_arr, shell_indices, aux_shell_indices):
     # Calculates 3c2e integrals based on a provided list of significant triplets determined using Schwarz inequality
     # It is assumed that the provided list was made with triangular int3c2e in mind
@@ -2101,7 +2101,7 @@ def rys_3c2e_tri_schwarz_sparse_algo9_internal(bfs_coords, bfs_contr_prim_norms,
     i_threads = np.zeros(get_num_threads(), dtype=np.uint8)
 
     #Loop over BFs
-    for itemp in prange(ntriplets):
+    for itemp in range(ntriplets):
         id_thrd = get_thread_id()
 
         if ibatch_threads[id_thrd]<offset.shape[0]:
@@ -2286,14 +2286,14 @@ def rys_3c2e_tri_schwarz_sparse_algo9_internal(bfs_coords, bfs_contr_prim_norms,
 # Reference: https://github.com/numba/numba/issues/8007#issuecomment-1113187684
 parallel_options_algo8 = {
     'comprehension': False,  # parallel comprehension
-    'prange':        False,  # parallel for-loop
+    'range':        False,  # parallel for-loop
     'numpy':         False,  # parallel numpy calls
     'reduction':     False,  # parallel reduce calls
     'setitem':       False,  # parallel setitem
     'stencil':       False,  # parallel stencils
     'fusion':        False,  # enable fusion or not
 }
-@njit(parallel=False, cache=True, fastmath=True, error_model="numpy", nogil=True, boundscheck=False, debug=False)
+# MLX compatible - no JIT
 def rys_3c2e_tri_schwarz_sparse_algo8_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, bfs_coeffs, bfs_prim_norms, bfs_expnts,aux_bfs_coords, aux_bfs_contr_prim_norms, aux_bfs_lmn, aux_bfs_nprim, aux_bfs_coeffs, aux_bfs_prim_norms, aux_bfs_expnts, ntriplets, nao, naux, sqrt_ints4c2e_diag, sqrt_diag_ints2c2e, threshold):
     # Calculates 3c2e integrals based on a provided list of significant triplets determined using Schwarz inequality
     # It is assumed that the provided list was made with triangular int3c2e in mind
@@ -2322,7 +2322,7 @@ def rys_3c2e_tri_schwarz_sparse_algo8_internal(bfs_coords, bfs_contr_prim_norms,
     
     index = 0
     #Loop pver BFs
-    for i in prange(0, nao): #A
+    for i in range(0, nao): #A
         
         I = bfs_coords[i]
         Ni = bfs_contr_prim_norms[i]
@@ -2330,7 +2330,7 @@ def rys_3c2e_tri_schwarz_sparse_algo8_internal(bfs_coords, bfs_contr_prim_norms,
         la, ma, na = lmni
         nprimi = bfs_nprim[i]
         
-        for j in prange(0, i+1): #B
+        for j in range(0, i+1): #B
             J = bfs_coords[j]
             IJ = I - J
             IJsq = np.sum(IJ**2)
@@ -2343,7 +2343,7 @@ def rys_3c2e_tri_schwarz_sparse_algo8_internal(bfs_coords, bfs_contr_prim_norms,
             sqrt_ij = sqrt_ints4c2e_diag[i,j]
             
             
-            for k in prange(0, naux): #C
+            for k in range(0, naux): #C
                 if sqrt_ij*sqrt_diag_ints2c2e[k]<=threshold:
                     continue
                 K = aux_bfs_coords[k]
@@ -2460,7 +2460,7 @@ def rys_3c2e_tri_schwarz_sparse_algo8_internal(bfs_coords, bfs_contr_prim_norms,
     return threeC2E
 
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy", nogil=True)
+# MLX compatible - no JIT
 def df_coeff_calculator_test(ints3c2e_1d, dmat_1d, indicesA, indicesB, indicesC, naux):
     # This function calculates the coefficients of the auxiliary basis for
     # density fitting. 
@@ -2473,7 +2473,7 @@ def df_coeff_calculator_test(ints3c2e_1d, dmat_1d, indicesA, indicesB, indicesC,
     # elements of ints3c2e array.
     nelements = ints3c2e_1d.shape[0]
     df_coeff = np.zeros((naux), dtype=np.float64)
-    for itemp in prange(nelements):
+    for itemp in range(nelements):
         # This is extremely slow even though the following is hoisted out automatically
         df_coeff_temp = np.zeros((naux), dtype=np.float64) # Temp arrary to avoid race condition 
         i = indicesA[itemp]
@@ -2498,7 +2498,7 @@ def df_coeff_calculator(ints3c2e_1d, dmat_1d, indicesA, indicesB, indicesC, naux
     return df_coeff
 
 
-@njit(parallel=False, cache=True, fastmath=True, error_model="numpy", nogil=True)
+# MLX compatible - no JIT
 def df_coeff_calculator_internal(ints3c2e_1d, dmat_1d, indicesA, indicesB, indicesC, naux):
     # This function calculates the coefficients of the auxiliary basis for
     # density fitting. 
@@ -2519,7 +2519,7 @@ def df_coeff_calculator_internal(ints3c2e_1d, dmat_1d, indicesA, indicesB, indic
         df_coeff[k] += ints3c2e_1d[itemp]*dmat_1d[j+offset] # This leads to race condition
     return df_coeff
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy", nogil=True)
+# MLX compatible - no JIT
 def df_coeff_calculator_old(ints3c2e_1d, dmat_1d, indicesA, indicesB, indicesC, naux):
     # This function calculates the coefficients of the auxiliary basis for
     # density fitting. 
@@ -2540,7 +2540,7 @@ def df_coeff_calculator_old(ints3c2e_1d, dmat_1d, indicesA, indicesB, indicesC, 
         df_coeff[k] += ints3c2e_1d[itemp]*dmat_1d[j+offset] # This leads to race condition
     return df_coeff
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy", nogil=True)
+# MLX compatible - no JIT
 def df_coeff_calculator_algo8(ints3c2e_1d, dmat_1d, sqrt_ints4c2e_diag, sqrt_diag_ints2c2e, threshold, nao, naux):
     # This function calculates the coefficients of the auxiliary basis for
     # density fitting. 
@@ -2564,7 +2564,7 @@ def df_coeff_calculator_algo8(ints3c2e_1d, dmat_1d, sqrt_ints4c2e_diag, sqrt_dia
                     itemp += 1
     return df_coeff
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy", nogil=True)
+# MLX compatible - no JIT
 def df_coeff_calculator_algo10_serial(ints3c2e_1d, dmat_1d, indicesA, indicesB, offsets_3c2e, naux, sqrt_ints4c2e_diag, sqrt_diag_ints2c2e, threshold, strict_schwarz):
     # This function calculates the coefficients of the auxiliary basis for
     # density fitting. 
@@ -2615,7 +2615,7 @@ def df_coeff_calculator_algo10_parallel(ints3c2e_1d, dmat_1d, indicesA, indicesB
     del output
     return df_coeff
 
-@njit(parallel=False, cache=True, fastmath=True, error_model="numpy", nogil=True)
+# MLX compatible - no JIT
 def df_coeff_calculator_algo10_parallel_internal(ints3c2e_1d, dmat_1d, indicesA, indicesB, offsets_3c2e, naux, sqrt_ints4c2e_diag, sqrt_diag_ints2c2e, threshold, strict_schwarz, auxbfs_lm):
     # This function calculates the coefficients of the auxiliary basis for
     # density fitting. 
@@ -2690,7 +2690,7 @@ def df_coeff_calculator_algo10_parallel_internal(ints3c2e_1d, dmat_1d, indicesA,
 #         offset = int(indicesA[i]*(indicesA[i]+1)/2)
 #         df_coeff_out[indicesC[i]] += ints3c2e_1d[i]*dmat_1d[indicesB[i]+offset]
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def J_tri_calculator(ints3c2e_1d, df_coeff, indicesA, indicesB, indicesC, size_J_tri):
     # This can also be simply calculated using:
     # J = contract('ijk,k', ints3c2e, df_coeff) # For general 3d and 2d arrays
@@ -2701,7 +2701,7 @@ def J_tri_calculator(ints3c2e_1d, df_coeff, indicesA, indicesB, indicesC, size_J
     # elements of ints3c2e array.
     nelements = ints3c2e_1d.shape[0]
     J_tri = np.zeros((size_J_tri), dtype=np.float64) 
-    for itemp in prange(nelements): 
+    for itemp in range(nelements): 
         i = indicesA[itemp]
         offset = int(i*(i+1)/2)
         j = indicesB[itemp] 
@@ -2709,7 +2709,7 @@ def J_tri_calculator(ints3c2e_1d, df_coeff, indicesA, indicesB, indicesC, size_J
         J_tri[j+offset] += ints3c2e_1d[itemp]*df_coeff[k] 
     return J_tri
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def J_tri_calculator_algo10(ints3c2e_1d, df_coeff, indicesA, indicesB, offsets_3c2e, size_J_tri, sqrt_ints4c2e_diag, sqrt_diag_ints2c2e, threshold, naux, strict_schwarz, auxbfs_lm):
     # This can also be simply calculated using:
     # J = contract('ijk,k', ints3c2e, df_coeff) # For general 3d and 2d arrays
@@ -2721,7 +2721,7 @@ def J_tri_calculator_algo10(ints3c2e_1d, df_coeff, indicesA, indicesB, offsets_3
     # print(indicesA)
     npairs = indicesA.shape[0]
     J_tri = np.zeros((size_J_tri), dtype=np.float64) 
-    for itemp in prange(npairs): 
+    for itemp in range(npairs): 
         i = indicesA[itemp]
         offset = int(i*(i+1)/2)
         j = indicesB[itemp] 
@@ -2756,7 +2756,7 @@ def J_tri_calculator_algo10(ints3c2e_1d, df_coeff, indicesA, indicesB, offsets_3
                 index_k += 1
     return J_tri
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def J_tri_calculator_algo8(ints3c2e_1d, df_coeff, sqrt_ints4c2e_diag, sqrt_diag_ints2c2e, threshold, nao, naux, size_J_tri):
     # This can also be simply calculated using:
     # J = contract('ijk,k', ints3c2e, df_coeff) # For general 3d and 2d arrays
@@ -2777,7 +2777,7 @@ def J_tri_calculator_algo8(ints3c2e_1d, df_coeff, sqrt_ints4c2e_diag, sqrt_diag_
                     itemp += 1
     return J_tri
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def J_tri_calculator_from_4c2e(ints4c2e_1d, dmat_1d, indicesA, indicesB, indicesC, indicesD, size_J_tri):
     # This can also be simply calculated using:
     # J = contract('ijkl,lk', ints4c2e, ddmat) # For general 3d and 2d arrays
@@ -2786,7 +2786,7 @@ def J_tri_calculator_from_4c2e(ints4c2e_1d, dmat_1d, indicesA, indicesB, indices
     # elements of ints4c2e array.
     nelements = ints4c2e_1d.shape[0]
     J_tri = np.zeros((size_J_tri), dtype=np.float64) 
-    for itemp in prange(nelements): 
+    for itemp in range(nelements): 
         i = indicesA[itemp]
         offset = int(i*(i+1)/2)
         j = indicesB[itemp] 
@@ -2796,9 +2796,9 @@ def J_tri_calculator_from_4c2e(ints4c2e_1d, dmat_1d, indicesA, indicesB, indices
     return J_tri
 
 import numpy as np
-from numba import cuda, njit
+# # Removed numba import - using pure Python for MLX compatibility
 
-@cuda.jit
+# MLX compatible - no CUDA
 def J_tri_calculator_kernel(ints3c2e_1d, df_coeff, indicesA, indicesB, indicesC, J_tri):
     # This can also be simply calculated using:
     # J = contract('ijk,k', ints3c2e, df_coeff) # For general 3d and 2d arrays

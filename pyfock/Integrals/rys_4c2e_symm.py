@@ -1,5 +1,5 @@
 import numpy as np
-from numba import njit, prange
+# # Removed numba import - using pure Python for MLX compatibility
 
 from .integral_helpers import Fboys
 from .rys_helpers import coulomb_rys, ChebGausInt
@@ -77,7 +77,7 @@ def rys_4c2e_symm(basis, slice=None):
     """
     # Here the lists are converted to numpy arrays for better use with Numba.
     # Once these conversions are done we pass these to a Numba decorated
-    # function that uses prange, etc. to calculate the 4c2e integrals efficiently.
+    # function that uses range, etc. to calculate the 4c2e integrals efficiently.
     # This function calculates the 4c2e electron-electron ERIs for a given basis object.
     # The basis object holds the information of basis functions like: exponents, coeffs, etc.
 
@@ -130,7 +130,7 @@ def rys_4c2e_symm(basis, slice=None):
 
     return ints4c2e
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def rys_4c2e_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, bfs_coeffs, bfs_prim_norms, bfs_expnts, shell_indices, indx_startA, indx_endA, indx_startB, indx_endB, indx_startC, indx_endC, indx_startD, indx_endD):
     #  Based on Rys Quadrature from https://github.com/rpmuller/MolecularIntegrals.jl
     # This function calculates the 4D electron-electron repulsion integrals (ERIs) array for a given basis object and mol object.
@@ -177,7 +177,7 @@ def rys_4c2e_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim,
     maxprims = bfs_coeffs.shape[1]
 
     #Loop pver BFs
-    for i in prange(indx_startA, indx_endA): #A
+    for i in range(indx_startA, indx_endA): #A
         I = bfs_coords[i]
         Ni = bfs_contr_prim_norms[i]
         lmni = bfs_lmn[i]
@@ -370,8 +370,8 @@ def rys_4c2e_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim,
         for i in range(indx_startA, indx_endA):
             for j in range(indx_startB, indx_endB):
                 if j<=i:
-                    for k in prange(indx_startC, indx_endC):
-                        for l in prange(indx_startD, indx_endD):
+                    for k in range(indx_startC, indx_endC):
+                        for l in range(indx_startD, indx_endD):
                             val = fourC2E[i-indx_startA, j-indx_startB, k-indx_startC, l-indx_startD]
                             if l<=k:
                                 fourC2E[j-indx_startB, i-indx_startA, k-indx_startC, l-indx_startD] = val
@@ -401,8 +401,8 @@ def rys_4c2e_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim,
         for i in range(indx_startA, indx_endA):
             for j in range(indx_startB, indx_endB):
                 if j<=i:
-                    for k in prange(indx_startC, indx_endC):
-                        for l in prange(indx_startD, indx_endD):
+                    for k in range(indx_startC, indx_endC):
+                        for l in range(indx_startD, indx_endD):
                             val = fourC2E[i-indx_startA, j-indx_startB, k-indx_startC, l-indx_startD]
                             if l<=k:
                                 fourC2E[j-indx_startB, i-indx_startA, k-indx_startC, l-indx_startD] = val
@@ -415,7 +415,7 @@ def rys_4c2e_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim,
 def rys_4c2e_symm_old(basis, slice=None):
     # Here the lists are converted to numpy arrays for better use with Numba.
     # Once these conversions are done we pass these to a Numba decorated
-    # function that uses prange, etc. to calculate the 4c2e integrals efficiently.
+    # function that uses range, etc. to calculate the 4c2e integrals efficiently.
     # This function calculates the 4c2e electron-electron ERIs for a given basis object.
     # The basis object holds the information of basis functions like: exponents, coeffs, etc.
 
@@ -466,7 +466,7 @@ def rys_4c2e_symm_old(basis, slice=None):
 
     return ints4c2e
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def rys_4c2e_symm_internal_old(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, bfs_coeffs, bfs_prim_norms, bfs_expnts, indx_startA, indx_endA, indx_startB, indx_endB, indx_startC, indx_endC, indx_startD, indx_endD):
     #  Based on Rys Quadrature from https://github.com/rpmuller/MolecularIntegrals.jl
     # This function calculates the 4D electron-electron repulsion integrals (ERIs) array for a given basis object and mol object.
@@ -511,7 +511,7 @@ def rys_4c2e_symm_internal_old(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_np
     twopisq = 19.739208802178716  #2*PI^2
 
     #Loop pver BFs
-    for i in prange(indx_startA, indx_endA): #A
+    for i in range(indx_startA, indx_endA): #A
         I = bfs_coords[i]
         Ni = bfs_contr_prim_norms[i]
         lmni = bfs_lmn[i]
@@ -649,8 +649,8 @@ def rys_4c2e_symm_internal_old(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_np
         for i in range(indx_startA, indx_endA):
             for j in range(indx_startB, indx_endB):
                 if j<=i:
-                    for k in prange(indx_startC, indx_endC):
-                        for l in prange(indx_startD, indx_endD):
+                    for k in range(indx_startC, indx_endC):
+                        for l in range(indx_startD, indx_endD):
                             val = fourC2E[i-indx_startA, j-indx_startB, k-indx_startC, l-indx_startD]
                             if l<=k:
                                 fourC2E[j-indx_startB, i-indx_startA, k-indx_startC, l-indx_startD] = val
@@ -680,8 +680,8 @@ def rys_4c2e_symm_internal_old(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_np
         for i in range(indx_startA, indx_endA):
             for j in range(indx_startB, indx_endB):
                 if j<=i:
-                    for k in prange(indx_startC, indx_endC):
-                        for l in prange(indx_startD, indx_endD):
+                    for k in range(indx_startC, indx_endC):
+                        for l in range(indx_startD, indx_endD):
                             val = fourC2E[i-indx_startA, j-indx_startB, k-indx_startC, l-indx_startD]
                             if l<=k:
                                 fourC2E[j-indx_startB, i-indx_startA, k-indx_startC, l-indx_startD] = val

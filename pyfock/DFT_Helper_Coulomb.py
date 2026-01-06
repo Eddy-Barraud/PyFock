@@ -2,18 +2,21 @@ import pyfock.Mol as Mol
 import pyfock.Basis as Basis
 import pyfock.Integrals as Integrals
 from timeit import default_timer as timer
-import numba
 import numpy as np
 from numpy.linalg import eig, multi_dot as dot
 import scipy 
+
+# Try to import MLX for Apple Silicon acceleration
 try:
-    import cupy as cp
-    from cupy import fuse
-    import cupyx
-    CUPY_AVAILABLE = True
-except Exception as e:
-    CUPY_AVAILABLE = False
-    pass
+    import mlx.core as mx
+    MLX_AVAILABLE = True
+except ImportError:
+    MLX_AVAILABLE = False
+    mx = None
+
+# Cupy removed - using MLX for acceleration instead
+CUPY_AVAILABLE = False
+
 from threadpoolctl import ThreadpoolController, threadpool_info, threadpool_limits
 from opt_einsum import contract
 

@@ -1,5 +1,5 @@
 import numpy as np
-from numba import njit, prange
+# # Removed numba import - using pure Python for MLX compatibility
 
 from .integral_helpers import innerLoop4c2e
 from .rys_helpers import coulomb_rys
@@ -10,7 +10,7 @@ def rys_nuc_mat_symm(basis, mol, slice=None):
     # Ref: https://arxiv.org/pdf/2302.11307.pdf
     # Here the lists are converted to numpy arrays for better use with Numba.
     # Once these conversions are done we pass these to a Numba decorated
-    # function that uses prange, etc. to calculate the 3c2e integrals efficiently.
+    # function that uses range, etc. to calculate the 3c2e integrals efficiently.
     # This function calculates the 3c2e electron-electron ERIs for a given basis object and auxbasis object.
     # The basis object holds the information of basis functions like: exponents, coeffs, etc.
     
@@ -62,7 +62,7 @@ def rys_nuc_mat_symm(basis, mol, slice=None):
     ints3c2e = rys_nuc_symm_internal(bfs_coords[0], bfs_contr_prim_norms[0], bfs_lmn[0], bfs_nprim[0], bfs_coeffs, bfs_prim_norms, bfs_expnts, indx_startA, indx_endA, indx_startB, indx_endB, Z[0], coordsBohrs[0], natoms)
     return ints3c2e
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def rys_nuc_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, bfs_coeffs, bfs_prim_norms, bfs_expnts, indx_startA, indx_endA, indx_startB, indx_endB, Z, coordsBohrs, natoms):
     # This function calculates the three-centered two electron integrals for density fitting
     # The basis object holds the information of basis functions like: exponents, coeffs, etc.
@@ -109,14 +109,14 @@ def rys_nuc_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, 
     zeta_2pi_32 = (zeta/(pi))**(3/2)
 
     #Loop pver BFs
-    for i in prange(indx_startA, indx_endA): #A
+    for i in range(indx_startA, indx_endA): #A
         I = bfs_coords[i]
         Ni = bfs_contr_prim_norms[i]
         lmni = bfs_lmn[i]
         la, ma, na = lmni
         nprimi = bfs_nprim[i]
         
-        for j in prange(indx_startB, indx_endB): #B
+        for j in range(indx_startB, indx_endB): #B
             if lower_tri or upper_tri or (both_tri_symm and j<=i) or both_tri_nonsymm:
                 J = bfs_coords[j]
                 IJ = I - J
@@ -128,7 +128,7 @@ def rys_nuc_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, 
                 nprimj = bfs_nprim[j]
                 
                 val = 0.0
-                for k in prange(natoms): #C # These would be our nuclei
+                for k in range(natoms): #C # These would be our nuclei
                     K = coordsBohrs[k]
                     Nk = -Z[k]*zeta_2pi_32
                     lmnk = [0, 0, 0]
@@ -260,8 +260,8 @@ def rys_nuc_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, 
                                     
     if both_tri_symm:
         #We save time by evaluating only the lower diagonal elements and then use symmetry Vi,j=Vj,i 
-        for i in prange(indx_startA, indx_endA):
-            for j in prange(indx_startB, indx_endB):
+        for i in range(indx_startA, indx_endA):
+            for j in range(indx_startB, indx_endB):
                 if j>i:
                     Vnuc[i-indx_startA, j-indx_startB] = Vnuc[j-indx_startB, i-indx_startA]
                             

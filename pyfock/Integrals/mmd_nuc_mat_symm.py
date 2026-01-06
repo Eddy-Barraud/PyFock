@@ -1,12 +1,12 @@
 import numpy as np
-from numba import njit , prange
+# # # Removed numba import - using pure Python for MLX compatibility
 
 from .integral_helpers import c2k, vlriPartial, Fboys, hermite_gauss_coeff, aux_hermite_int
 
 def mmd_nuc_mat_symm(basis, mol, slice=None):
     #Here the lists are converted to numpy arrays for better use with Numba.
     #Once these conversions are done we pass these to a Numba decorated
-    #function that uses prange, etc. to calculate the matrix efficiently.
+    #function that uses range, etc. to calculate the matrix efficiently.
 
     # This function calculates the nuclear matrix for a given basis object.
     # The basis object holds the information of basis functions like: exponents, coeffs, etc.
@@ -58,7 +58,7 @@ def mmd_nuc_mat_symm(basis, mol, slice=None):
     
     return V 
 
-@njit(parallel=True, cache=False, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def mmd_nuc_mat_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, bfs_coeffs, bfs_prim_norms, bfs_expnts, start_row, end_row, start_col, end_col, Z, coordsMol, natoms):
     # This function calculates the nuclear potential matrix and uses the symmetry property to only calculate half-ish the elements
     # and get the remaining half by symmetry.
@@ -100,12 +100,12 @@ def mmd_nuc_mat_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_npr
     
     
     #Loop over BFs
-    for i in prange(start_row, end_row): 
+    for i in range(start_row, end_row): 
         I = bfs_coords[i]
         Ni = bfs_contr_prim_norms[i]
         lmni = bfs_lmn[i]
         la, ma, na = lmni
-        for j in prange(start_col, end_col):
+        for j in range(start_col, end_col):
             
             
             if lower_tri or upper_tri or (both_tri_symm and j<=i) or both_tri_nonsymm:
@@ -179,8 +179,8 @@ def mmd_nuc_mat_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_npr
       
     if both_tri_symm:
         #We save time by evaluating only the lower diagonal elements and then use symmetry Vi,j=Vj,i 
-        for i in prange(start_row, end_row):
-            for j in prange(start_col, end_col):
+        for i in range(start_row, end_row):
+            for j in range(start_col, end_col):
                 if j>i:
                     V[i-start_row, j-start_col] = V[j-start_col, i-start_row]
             

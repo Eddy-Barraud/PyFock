@@ -1,15 +1,22 @@
+# Try to import MLX for Apple Silicon acceleration
 try:
-    import cupy as cp
-    from cupy import fuse
-except Exception as e:
-    # Handle the case when Cupy is not installed
-    cp = None
-    # Define a dummy fuse decorator for CPU version
-    def fuse(kernel_name):
-        def decorator(func):
-            return func 
-        return decorator
+    import mlx.core as mx
+    MLX_AVAILABLE = True
+except ImportError:
+    MLX_AVAILABLE = False
+    mx = None
+
+# CuPy has been removed - using MLX/NumPy instead
+cp = None
+
+# Define a dummy fuse decorator for CPU version
+def fuse(kernel_name):
+    def decorator(func):
+        return func 
+    return decorator
+
 import numpy as np
+
 
 
 def gga_c_lyp_e(rho, sigma):
@@ -84,7 +91,7 @@ def gga_c_lyp_e_cupy(rho, sigma):
     # Corresponds to 106 id in Libxc
     # Adapted from https://github.com/dylan-jayatilaka/tonto/blob/master/foofiles/dft_functional.foo
     # Return the values of the Lee-Yang-Parr energy density and potential
-    # rho = cp.maximum(rho, 1e-12)
+    # rho = np.maximum(rho, 1e-12)
     # Constants
     a = 0.04918
     b = 0.132
@@ -109,7 +116,7 @@ def gga_c_lyp_v_cupy(rho, sigma):
     # Corresponds to 106 id in Libxc
     # Adapted from https://github.com/dylan-jayatilaka/tonto/blob/master/foofiles/dft_functional.foo
     # Return the derivatives of the LYP correlation functional.
-    # rho = cp.maximum(rho, 1e-12)
+    # rho = np.maximum(rho, 1e-12)
     const = (3 / 10) * (3 * cp.pi ** 2) ** (2 / 3)
     two_13 = 2 ** (1 / 3)
     two_m13 = 1 / two_13
@@ -145,7 +152,7 @@ def gga_c_lyp_cupy(rho, sigma):
     # Corresponds to 131 id in Libxc
     ec = gga_c_lyp_e_cupy(rho, sigma)
     vc, vsigma = gga_c_lyp_v_cupy(rho, sigma)
-    vsigma[cp.isnan(vsigma)] = 0
-    vc[cp.isnan(vc)] = 0
-    ec[cp.isnan(ec)] = 0
+    vsigma[np.isnan(vsigma)] = 0
+    vc[np.isnan(vc)] = 0
+    ec[np.isnan(ec)] = 0
     return ec, vc, vsigma

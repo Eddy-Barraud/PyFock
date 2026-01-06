@@ -1,5 +1,5 @@
 import numpy as np
-from numba import njit 
+# # Removed numba import - using pure Python for MLX compatibility
 from .integral_helpers import comb
 
 '''
@@ -9,11 +9,11 @@ https://github.com/rpmuller/pyquante2/
 More specifically from this file:
 https://github.com/rpmuller/pyquante2/blob/master/pyquante2/ints/hgp.py
 '''
-@njit(cache=True,fastmath=True, error_model='numpy', nogil=True)
+# MLX compatible - no JIT
 def gaussian_product_center(alphaa,xyza,alphab,xyzb):
     return (alphaa*xyza + alphab*xyzb)/(alphaa+alphab)
 
-@njit(cache=True,fastmath=True, error_model='numpy', nogil=True)
+# MLX compatible - no JIT
 def hgp_hrr(xyza,norma,lmna,alphaa,
         xyzb,normb,lmnb,alphab,
         xyzc,normc,lmnc,alphac,
@@ -91,7 +91,7 @@ def hgp_hrr(xyza,norma,lmna,alphaa,
                xyzb,normb,alphab,
                xyzc,normc,(lc,mc,nc),alphac,
                xyzd,normd,alphad,0)
-@njit(cache=True,fastmath=True, error_model='numpy', nogil=True)
+# MLX compatible - no JIT
 def hgp_vrr(xyza,norma,lmna,alphaa,
         xyzb,normb,alphab,
         xyzc,normc,lmnc,alphac,

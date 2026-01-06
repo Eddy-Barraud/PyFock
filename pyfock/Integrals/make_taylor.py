@@ -29,7 +29,7 @@ for i in range(max_order):
 
 with open("taylor.py", "w") as f:
     f.write("import numpy as np\n")
-    f.write("from numba import jit\n")
+    f.write("# Removed numba import - using pure Python for MLX compatibility\n")
     f.write("\n\n")
     f.write("table = np.array([\n")
     for i in range(max_angular+max_order):
@@ -37,7 +37,7 @@ with open("taylor.py", "w") as f:
         f.write("{},\n".format([float(mpmath.hyp1f1(i+0.5, i+1.5, x)) for x in expansion_points]))
     f.write("])\n")
     f.write("\n\n")
-    f.write("@jit(nopython=True, cache=True)\n")
+    f.write("# MLX compatible - no JIT\n")
     f.write("def taylor(a,z):\n")
     f.write("    z0 = int(np.round(z))\n")
     f.write("    zi = z0 + {}\n".format(offset))

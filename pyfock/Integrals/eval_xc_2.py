@@ -1,6 +1,11 @@
 import numpy as np
 import numexpr
-import pylibxc
+try:
+    import pylibxc
+    PYLIBXC_AVAILABLE = True
+except ImportError:
+    PYLIBXC_AVAILABLE = False
+    pylibxc = None
 from timeit import default_timer as timer
 # from time import process_time
 from pyfock import Integrals
@@ -8,8 +13,8 @@ from opt_einsum import contract
 from joblib import Parallel, delayed
 from threadpoolctl import ThreadpoolController, threadpool_info, threadpool_limits
 import gc
-import numba
-from numba import njit
+# import numba (replaced with pure Python for MLX)
+# # Removed numba import - using pure Python for MLX compatibility
 import scipy
 import random
 
@@ -176,7 +181,7 @@ def eval_xc_2(basis, dmat, weights, coords, funcid=[1,7], spin=0, ncores=2, bloc
     #### Set number of cores for numba related evaluations within 'block_dens_func()' for example bf_value evaluations 
     #### Apparently, it was still using as many cores as possible and creating a serial version of thise functions as I have 
     #### currently done doesn't work  
-    numba.set_num_threads(1)
+    
     # Shuffle the blocks (for load balancing)
     block_indices = list(range(nblocks+1))
     random.shuffle(block_indices)
@@ -243,7 +248,7 @@ def eval_xc_2(basis, dmat, weights, coords, funcid=[1,7], spin=0, ncores=2, bloc
     # print('here2')
     
 
-    numba.set_num_threads(ncores)    
+    
     print('Number of electrons: ', nelec)
     if debug:
         print('Timings:', timings)
@@ -273,7 +278,7 @@ def block_dens_func(weights_block, coords_block, dmat, funcid, bfs_data_as_np_ar
     durationV = 0.0
     durationRho = 0.0
     durationAO = 0.0
-    numba.set_num_threads(1)
+    
 
     if funcx is None:
         # xc_family_dict = {1:'LDA',2:'GGA',4:'MGGA'}
@@ -514,7 +519,7 @@ def block_dens_func(weights_block, coords_block, dmat, funcid, bfs_data_as_np_ar
     return efunc, v, nelec, profiling_timings
 
 # Extremely slow
-# @njit(parallel=False, cache=True, fastmath=True, error_model="numpy", nogil=True)
+# # MLX compatible - no JIT
 # def symmetric_matrix_product(A, B):
 #     n = A.shape[0]
 #     C = np.zeros((n, n))
