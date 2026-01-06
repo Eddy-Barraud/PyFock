@@ -29,7 +29,7 @@ for i in range(max_order):
 
 with open("taylor.py", "w") as f:
     f.write("import numpy as np\n")
-    f.write("# # Removed numba import - using pure Python for MLX compatibility
+    f.write("# Removed numba import - using pure Python for MLX compatibility\n")
     f.write("\n\n")
     f.write("table = np.array([\n")
     for i in range(max_angular+max_order):

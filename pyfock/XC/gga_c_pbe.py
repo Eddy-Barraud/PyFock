@@ -16,14 +16,13 @@ def fuse(kernel_name):
     return decorator
 
 import numpy as np
-# from pyfock.XC import lda_c_pw_mod, lda_c_pw_mod_cupy
 from pyfock.XC.lda_c_pw_mod import lda_c_pw_mod_, lda_c_pw_mod_cupy_
 
 # The following implementation of the PBE correlation has been taken from this repository (https://github.com/wangenau/eminus/blob/main/eminus/xc/gga_c_pbe.py)
 # pretty much as is. The repo has the Apache 2.0 license.
 
 
-def gga_c_pbe_cupy_(rho, sigma):
+def gga_c_pbe_(rho, sigma):
     # Taken from: https://github.com/wangenau/eminus/blob/main/eminus/xc/gga_c_pbe.py
     # Perdew-Burke-Ernzerhof parametrization of the correlation functional (spin-paired).
     # Corresponds to the functional with the label GGA_C_PBE and ID 130 in Libxc.
@@ -80,14 +79,14 @@ def gga_c_pbe(rho, sigma):
 
     return ec, vc, vsigma
 
-@fuse(kernel_name='pbe_c_pbe_cupy_')
+@fuse(kernel_name="pbe_c_pbe_cupy_")
 def gga_c_pbe_cupy_(rho, sigma):
     # Taken from: https://github.com/wangenau/eminus/blob/main/eminus/xc/gga_c_pbe.py
     # Perdew-Burke-Ernzerhof parametrization of the correlation functional (spin-paired).
     # Corresponds to the functional with the label GGA_C_PBE and ID 130 in Libxc.
     # Reference: Phys. Rev. Lett. 78, 1396.
 
-    rho = cp.maximum(rho, 1e-12)
+    rho = np.maximum(rho, 1e-12)
 
     beta = 0.06672455060314922
     gamma = (1 - np.log(2)) / np.pi**2
@@ -124,6 +123,7 @@ def gga_c_pbe_cupy_(rho, sigma):
 
     return ec, vc, vsigma
 
+@fuse(kernel_name="gga_c_pbe_cupy")
 def gga_c_pbe_cupy(rho, sigma):
     # Taken from: https://github.com/wangenau/eminus/blob/main/eminus/xc/gga_c_pbe.py
     # Perdew-Burke-Ernzerhof parametrization of the correlation functional (spin-paired).
@@ -132,8 +132,8 @@ def gga_c_pbe_cupy(rho, sigma):
     
     ec, vc, vsigma = gga_c_pbe_cupy_(rho, sigma)
     
-    vsigma[cp.isnan(vsigma)] = 0
-    vc[cp.isnan(vc)] = 0
-    ec[cp.isnan(ec)] = 0
+    vsigma[np.isnan(vsigma)] = 0
+    vc[np.isnan(vc)] = 0
+    ec[np.isnan(ec)] = 0
 
     return ec, vc, vsigma

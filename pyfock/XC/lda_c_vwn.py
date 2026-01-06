@@ -125,7 +125,7 @@ def lda_c_vwn_cupy_(rho):
 
     """
 
-    rho = cp.maximum(rho, 1e-12)
+    rho = np.maximum(rho, 1e-12)
     
     a = 0.0310907
     b = 3.72744
@@ -172,6 +172,6 @@ def lda_c_vwn_cupy(rho):
     This is a numerically safe version of `lda_c_vwn_cupy_` intended for production use.
     """
     ec, vc = lda_c_vwn_cupy_(rho)
-    vc[cp.isnan(vc)] = 0
-    ec[cp.isnan(ec)] = 0
+    vc[np.isnan(vc)] = 0
+    ec[np.isnan(ec)] = 0
     return ec, vc

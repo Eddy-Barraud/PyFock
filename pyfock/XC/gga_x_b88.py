@@ -92,7 +92,7 @@ def gga_x_b88_e_cupy(rho, sigma):
     # Corresponds to 106 id in Libxc
 
     # rho_cutoff = 1e-12  # define rho_cutoff constant
-    # rho = cp.maximum(rho, 1e-12)
+    # rho = np.maximum(rho, 1e-12)
 
     beta = 0.0042  # beta parameter
     beta6 = 6 * beta
@@ -121,8 +121,8 @@ def gga_x_b88_v_cupy(rho, sigma):
     # be 1/3 not 4/3.
     # Corresponds to 106 id in Libxc
 
-    # rho = cp.maximum(rho, 1e-12)
-    # sigma = cp.maximum(sigma, 1e-12)
+    # rho = np.maximum(rho, 1e-12)
+    # sigma = np.maximum(sigma, 1e-12)
 
     beta = 0.0042  # beta parameter
     beta2 = 2 * beta
@@ -134,15 +134,15 @@ def gga_x_b88_v_cupy(rho, sigma):
     rho_13 = rho1 ** (1 / 3)
     rho_43 = rho1 * rho_13
     gg = 0.5 * np.sqrt(sigma)
-    # print(cp.min(gg))
+    # print(np.min(gg))
     x = gg / rho_43
     x2 = x * x
-    # print(cp.min(x2))
+    # print(np.min(x2))
     sq = np.sqrt(1 + x2)
-    # print(cp.isnan(cp.sum(sq)))
+    # print(np.isnan(np.sum(sq)))
     as_ = np.log(x + sq) 
     # sq = np.sqrt(1 + x2)
-    # as_ = np.log(cp.maximum(x + sq, 1e-12))
+    # as_ = np.log(np.maximum(x + sq, 1e-12))
     d = 1 / (1 + beta6 * x * as_)
     d2 = d * d
     g0 = const + beta * x2 * d
@@ -158,7 +158,7 @@ def gga_x_b88_cupy(rho, sigma):
     # Corresponds to 106 id in Libxc
     ex = gga_x_b88_e_cupy(rho, sigma)
     vx, vsigma = gga_x_b88_v_cupy(rho, sigma)
-    vsigma[cp.isnan(vsigma)] = 0
-    vx[cp.isnan(vx)] = 0
-    ex[cp.isnan(ex)] = 0
+    vsigma[np.isnan(vsigma)] = 0
+    vx[np.isnan(vx)] = 0
+    ex[np.isnan(ex)] = 0
     return ex, vx, vsigma
