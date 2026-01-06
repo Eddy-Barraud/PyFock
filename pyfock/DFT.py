@@ -15,6 +15,15 @@
 #                    Y8b d88P                                       Y8b d88P                                    
 #                     "Y88P"                                         "Y88P"                                       
 from re import T
+
+# MLX support for Apple Silicon acceleration
+try:
+    import mlx.core as mx
+    MLX_AVAILABLE = True
+except ImportError:
+    MLX_AVAILABLE = False
+    mx = None
+
 from pyfock.Utils import print_pyfock_logo
 # Print system information 
 from pyfock.Utils import print_sys_info
@@ -30,25 +39,21 @@ from numpy.linalg import eig, multi_dot as dot
 import scipy 
     
 from timeit import default_timer as timer
-import numba
 from opt_einsum import contract
-import pylibxc
+try:
+    import pylibxc
+    PYLIBXC_AVAILABLE = True
+except ImportError:
+    PYLIBXC_AVAILABLE = False
+    pylibxc = None
 # import sparse
 # import dask.array as da
 from scipy.sparse import csr_matrix, csc_matrix
 # from memory_profiler import profile
 import os
-from numba import njit, prange, cuda
 import numexpr
-try:
-    import cupy as cp
-    from cupy import fuse
-    import cupyx
-    CUPY_AVAILABLE = True
-except Exception as e:
-    print('Cupy is not installed. GPU acceleration is not availble.')
-    CUPY_AVAILABLE = False
-    pass
+# Removed cupy imports - using MLX for acceleration instead
+CUPY_AVAILABLE = False
 from pyfock.DFT_Helper_Coulomb import density_fitting_prelims_for_DFT_development
 from pyfock.DFT_Helper_Coulomb import Jmat_from_density_fitting
 

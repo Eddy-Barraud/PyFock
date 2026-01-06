@@ -1,6 +1,14 @@
+# Try to import MLX for Apple Silicon acceleration
 try:
-    import cupy as cp
-    from cupy import fuse
+    import mlx.core as mx
+    MLX_AVAILABLE = True
+except ImportError:
+    MLX_AVAILABLE = False
+    mx = None
+
+try:
+    # import cupy as cp (replaced with MLX for Apple Silicon)
+    # from cupy import fuse (replaced with MLX for Apple Silicon)
 except Exception as e:
     # Handle the case when Cupy is not installed
     cp = None
@@ -125,16 +133,16 @@ def lda_c_vwn_cupy_(rho):
     b = 3.72744
     c = 12.9352
     x0 = -0.10498
-    pi34 = (3 / (4 * cp.pi))**(1 / 3)
-    rs = pi34 * cp.power(rho, -1 / 3)
-    q = cp.sqrt(4 * c - b * b)
+    pi34 = (3 / (4 * np.pi))**(1 / 3)
+    rs = pi34 * np.power(rho, -1 / 3)
+    q = np.sqrt(4 * c - b * b)
     f1 = 2 * b / q
     f2 = b * x0 / (x0 * x0 + b * x0 + c)
     f3 = 2 * (2 * x0 + b) / q
-    rs12 = cp.sqrt(rs)
+    rs12 = np.sqrt(rs)
     fx = rs + b * rs12 + c
-    qx = cp.arctan(q / (2 * rs12 + b))
-    ec = a * (cp.log(rs / fx) + f1 * qx - f2 * (cp.log((rs12 - x0)**2 / fx) + f3 * qx))
+    qx = np.arctan(q / (2 * rs12 + b))
+    ec = a * (np.log(rs / fx) + f1 * qx - f2 * (np.log((rs12 - x0)**2 / fx) + f3 * qx))
     tx = 2 * rs12 + b
     tt = tx * tx + q * q
     vc = ec - rs12 * a / 6 * (2 / rs12 - tx / fx - 4 * b / tt -

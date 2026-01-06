@@ -1,13 +1,25 @@
 import numpy as np
 import numexpr
-import pylibxc
+
+try:
+    import pylibxc
+    PYLIBXC_AVAILABLE = True
+except ImportError:
+    PYLIBXC_AVAILABLE = False
+    pylibxc = None
+
 from timeit import default_timer as timer
 # from time import process_time
 from pyfock import Integrals
 from opt_einsum import contract
 from threadpoolctl import ThreadpoolController, threadpool_info, threadpool_limits
-import numba
-import ray
+
+try:
+    import ray
+    RAY_AVAILABLE = True
+except ImportError:
+    RAY_AVAILABLE = False
+    ray = None
 
 # funcx_global = pylibxc.LibXCFunctional(1, "unpolarized")
 # funcc_global = pylibxc.LibXCFunctional(7, "unpolarized")
@@ -141,7 +153,7 @@ def eval_xc_3(basis, dmat, weights, coords, funcid=[1,7], spin=0, ncores=2, bloc
 
 
 
-    numba.set_num_threads(ncores)    
+    # numba.set_num_threads - removed for MLX compatibility
     print('Number of electrons: ', nelec)
     if debug:
         print('Timings:', timings)
@@ -158,9 +170,9 @@ def eval_xc_3(basis, dmat, weights, coords, funcid=[1,7], spin=0, ncores=2, bloc
     return efunc, v
 
 
-@ray.remote(num_cpus=1)
-def block_dens_func(weights_block, coords_block, dmat, funcid, bfs_data_as_np_arrays, non_zero_indices=None, ao_values=None, ao_grad_values=None, funcx=None, funcc=None, x_family_code=None, c_family_code=None, xc_family_dict=None, debug=False):
-    numba.set_num_threads(1)
+def _block_dens_func_impl(weights_block, coords_block, dmat, funcid, bfs_data_as_np_arrays, non_zero_indices=None, ao_values=None, ao_grad_values=None, funcx=None, funcc=None, x_family_code=None, c_family_code=None, xc_family_dict=None, debug=False):
+    """Implementation of block_dens_func without ray decorator."""
+    # numba.set_num_threads - removed for MLX compatibility
     with threadpool_limits(limits=1, user_api='blas'):
         ### Use threadpoolctl https://github.com/numpy/numpy/issues/11826
         # to set the number of threads to 1
@@ -400,3 +412,9 @@ def block_dens_func(weights_block, coords_block, dmat, funcid, bfs_data_as_np_ar
 #     C += np.tril(C, k=-1).T
     
 #     return C
+
+# Wrap the block_dens_func with ray.remote if available
+if RAY_AVAILABLE:
+    block_dens_func = ray.remote(num_cpus=1)(_block_dens_func_impl)
+else:
+    block_dens_func = _block_dens_func_impl

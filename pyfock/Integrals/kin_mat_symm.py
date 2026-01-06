@@ -1,5 +1,5 @@
 import numpy as np
-from numba import njit, prange
+# # Removed numba import - using pure Python for MLX compatibility
 from .integral_helpers import calcS
 
 def kin_mat_symm(basis, slice=None):
@@ -80,7 +80,7 @@ def kin_mat_symm(basis, slice=None):
     
     return T
 
-@njit(parallel=True, cache=True, fastmath=True)  # Added fastmath for better performance
+# MLX compatible - no JIT
 def kin_mat_symm_internal_optimized(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, 
                                    bfs_coeffs, bfs_prim_norms, bfs_expnts, 
                                    start_row, end_row, start_col, end_col):
@@ -106,7 +106,7 @@ def kin_mat_symm_internal_optimized(bfs_coords, bfs_contr_prim_norms, bfs_lmn, b
     # Pre-compute some constants
     CUTOFF = 1.0e-9  # Threshold for early termination
     
-    for i in prange(start_row, end_row):
+    for i in range(start_row, end_row):
         I = bfs_coords[i]
         Ni = bfs_contr_prim_norms[i]
         lmni = bfs_lmn[i]
@@ -206,14 +206,14 @@ def kin_mat_symm_internal_optimized(bfs_coords, bfs_contr_prim_norms, bfs_lmn, b
     
     # Handle symmetry
     if both_tri_symm:
-        for i in prange(start_row, end_row):
+        for i in range(start_row, end_row):
             for j in range(start_col, min(i, end_col)):  # Only fill upper triangle
                 T[j - start_col, i - start_row] = T[i - start_row, j - start_col]
     
     return T
 
 # Alternative: Consider using a block-based approach for very large matrices
-@njit(parallel=True, cache=True, fastmath=True)
+# MLX compatible - no JIT
 def kin_mat_symm_blocked(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim,
                         bfs_coeffs, bfs_prim_norms, bfs_expnts,
                         start_row, end_row, start_col, end_col, block_size=64):
@@ -258,7 +258,7 @@ def kin_mat_symm_blocked(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim,
 
 
 # import numpy as np
-# from numba import njit, prange
+# # # Removed numba import - using pure Python for MLX compatibility
 # from .integral_helpers import calcS
 
 # def kin_mat_symm(basis, slice=None):
@@ -369,7 +369,7 @@ def kin_mat_symm_blocked(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim,
 #             shell_lmn, shell_bf_indices, bf_to_shell, bf_to_shell_func,
 #             max_nprim, max_nbf_in_shell)
 
-# @njit(parallel=True, cache=True, fastmath=True)
+# # MLX compatible - no JIT
 # def kin_mat_shell_internal(nshells, shell_centers, shell_L, shell_nprim, shell_nbf,
 #                           shell_exponents, shell_coefficients, shell_prim_norms, shell_contr_norms,
 #                           shell_lmn, shell_bf_indices, bf_to_shell, bf_to_shell_func,
@@ -398,7 +398,7 @@ def kin_mat_symm_blocked(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim,
 #                 shell_col_needed[ishell] = True
     
 #     # Loop over shell pairs
-#     for ishell in prange(nshells):
+#     for ishell in range(nshells):
 #         if not shell_row_needed[ishell]:
 #             continue
             
@@ -525,7 +525,7 @@ def kin_mat_symm_blocked(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim,
 #     return T
 
 # # Simplified version that focuses on the core optimization
-# @njit(parallel=True, cache=True, fastmath=True)
+# # MLX compatible - no JIT
 # def kin_mat_shell_simple(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, 
 #                         bfs_coeffs, bfs_prim_norms, bfs_expnts, 
 #                         start_row, end_row, start_col, end_col):
@@ -545,7 +545,7 @@ def kin_mat_symm_blocked(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim,
 #     nbf = len(bfs_coords)
 #     processed = np.zeros(nbf, dtype=np.bool_)
     
-#     for i in prange(start_row, end_row):
+#     for i in range(start_row, end_row):
 #         if processed[i]:
 #             continue
             

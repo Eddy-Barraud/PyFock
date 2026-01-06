@@ -1,6 +1,6 @@
 import numpy as np
-from numba import njit 
-from numba import cuda
+# # Removed numba import - using pure Python for MLX compatibility
+# # Removed numba import - using pure Python for MLX compatibility
 import math
 try:
     import cupy as cp
@@ -14,7 +14,7 @@ except Exception as e:
             return func 
         return decorator
 
-@cuda.jit(fastmath=True, cache=True, device=True)
+# MLX compatible - no CUDA
 def coulomb_rys(roots,weights,G,rpq2, rho, norder,n,m,la,lb,lc,ld,ma,mb,mc,md,na,nb,nc,nd,alphaik, alphajk, alphakk, alphalk,I,J,K,L):
     # X = rpq2*rho
 
@@ -53,7 +53,7 @@ def coulomb_rys(roots,weights,G,rpq2, rho, norder,n,m,la,lb,lc,ld,ma,mb,mc,md,na
     
     return  val
 
-@njit(cache=True, fastmath=True, error_model='numpy', nogil=True)#, locals=dict(ijkl=np.float32, Ix=np.float32, Iy=np.float32, Iz=np.float32, val=np.float32)
+# MLX compatible - no JIT
 def coulomb_rys_3c2e(roots,weights,G,rpq2, rho, norder,n,m,la,lb,lc,ld,ma,mb,mc,md,na,nb,nc,nd,alphaik, alphajk, alphakk, alphalk,I,J,K,L,IJ,P,prod_alphaikjk,gammaP,ABsrt):
     
     # A = alphaik+alphajk 
@@ -124,7 +124,7 @@ def coulomb_rys_3c2e(roots,weights,G,rpq2, rho, norder,n,m,la,lb,lc,ld,ma,mb,mc,
     
     return  val
 
-@cuda.jit(fastmath=True, cache=True, device=True)
+# MLX compatible - no CUDA
 def coulomb_rys_fp32(roots,weights,G,rpq2, rho, norder,n,m,la,lb,lc,ld,ma,mb,mc,md,na,nb,nc,nd,alphaik, alphajk, alphakk, alphalk,I,J,K,L):
     # X = rpq2*rho
 
@@ -163,18 +163,18 @@ def coulomb_rys_fp32(roots,weights,G,rpq2, rho, norder,n,m,la,lb,lc,ld,ma,mb,mc,
     
     return  val
 
-@cuda.jit(fastmath=True, cache=True, device=True)
+# MLX compatible - no CUDA
 def Int1d(G,t,ix,jx,kx,lx,xi,xj,xk,xl,alphai,alphaj,alphak,alphal):
     #G = RecurNumba2(G,t,ix,jx,kx,lx,xi,xj,xk,xl,alphai,alphaj,alphak,alphal)
     return Shift(G,ix,jx,kx,lx,xi-xj,xk-xl)
 
-@cuda.jit(fastmath=True, cache=True, device=True)
+# MLX compatible - no CUDA
 def Int1d_fp32(G,t,ix,jx,kx,lx,xi,xj,xk,xl,alphai,alphaj,alphak,alphal):
     #G = RecurNumba2(G,t,ix,jx,kx,lx,xi,xj,xk,xl,alphai,alphaj,alphak,alphal)
     return Shift_fp32(G,ix,jx,kx,lx,xi-xj,xk-xl)
 
 "Form G(n,m)=I(n,0,m,0) intermediate values for a Rys polynomial"
-@cuda.jit(fastmath=True, cache=True, device=True)
+# MLX compatible - no CUDA
 def Recur(G,t,i,j,k,l,xi,xj,xk,xl,alphai,alphaj,alphak,alphal,A,B,Ap,Bp,ABsrt):
     # print('RecurNumba1', G[0,0])
     # G1 = np.zeros((n1+1,m1+1))
@@ -217,7 +217,7 @@ def Recur(G,t,i,j,k,l,xi,xj,xk,xl,alphai,alphaj,alphak,alphal,A,B,Ap,Bp,ABsrt):
     
     return G
 
-@cuda.jit(fastmath=True, cache=True, device=True)
+# MLX compatible - no CUDA
 def Recur_3c2e(G,t,i,j,k,l,xi,xj,xk,xl,alphai,alphaj,alphak,alphal,A,B,Ap,ABsrt):
     
     n = i+j
@@ -258,7 +258,7 @@ def Recur_3c2e(G,t,i,j,k,l,xi,xj,xk,xl,alphai,alphaj,alphak,alphal,A,B,Ap,ABsrt)
     return G
 
 "Form G(n,m)=I(n,0,m,0) intermediate values for a Rys polynomial"
-@cuda.jit(fastmath=True, cache=True, device=True)
+# MLX compatible - no CUDA
 def Recur_fp32(G,t,i,j,k,l,xi,xj,xk,xl,alphai,alphaj,alphak,alphal,A,B,Ap,Bp,ABsrt):
     # print('RecurNumba1', G[0,0])
     # G1 = np.zeros((n1+1,m1+1))
@@ -301,7 +301,7 @@ def Recur_fp32(G,t,i,j,k,l,xi,xj,xk,xl,alphai,alphaj,alphak,alphal,A,B,Ap,Bp,ABs
     
     return G
 
-@cuda.jit(fastmath=True, cache=True, device=True)
+# MLX compatible - no CUDA
 def RecurFactors(t,A,B,Px,Qx,xi,xk):
     ooopt = 1/(1+t)
     fact = t*ooopt/(A+B)
@@ -314,7 +314,7 @@ def RecurFactors(t,A,B,Px,Qx,xi,xk):
     Cp = (Qx-xk)*ooopt + (B*(Qx-xk)+A*(Px-xk))*fact
     return C,Cp,B0,B1,B1p
 
-@cuda.jit(fastmath=True, cache=True, device=True)
+# MLX compatible - no CUDA
 def RecurFactors_fp32(t,A,B,Px,Qx,xi,xk):
     ooopt = 1/(1+t)
     fact = t*ooopt/(A+B)
@@ -334,11 +334,11 @@ LOOKUP_TABLE = np.array([
     20922789888000, 355687428096000, 6402373705728000,
     121645100408832000, 2432902008176640000], dtype='int64')
 
-@cuda.jit(fastmath=True, cache=True, device=True)
+# MLX compatible - no CUDA
 def fastFactorial(n):
     # This is the way to access global constant arrays (which need to be on host, i.e. created using numpy for some reason)
     # See https://stackoverflow.com/questions/63311574/in-numba-how-to-copy-an-array-into-constant-memory-when-targeting-cuda
-    LOOKUP_TABLE_ = cuda.const.array_like(LOOKUP_TABLE) 
+    LOOKUP_TABLE_ = # cuda removed(LOOKUP_TABLE) 
     # 2-3x faster than the fastFactorial_old for values less than 21
     if n<= 1:
         return 1
@@ -357,9 +357,9 @@ LOOKUP_TABLE_COMB = np.array([[ 1,  0,  0,  0,  0,  0],
                         [ 1,  4,  6,  4,  1,  0],
                         [ 1,  5, 10, 10,  5,  1]])
 
-@cuda.jit(fastmath=True, cache=True, device=True)
+# MLX compatible - no CUDA
 def comb(x, y):
-    table = cuda.const.array_like(LOOKUP_TABLE_COMB) 
+    table = # cuda removed(LOOKUP_TABLE_COMB) 
     if y == 0: 
         return 1
     if x == y: 
@@ -369,9 +369,9 @@ def comb(x, y):
     binom = fastFactorial(x) // fastFactorial(y) // fastFactorial(x - y)
     return binom
 
-@cuda.jit(fastmath=True, cache=True, device=True)
+# MLX compatible - no CUDA
 def Shift(G,i,j,k,l,xij,xkl):
-    table = cuda.const.array_like(LOOKUP_TABLE_COMB) 
+    table = # cuda removed(LOOKUP_TABLE_COMB) 
     ijkl = 0.0 
     for m in range(l+1):
         ijm0 = 0.0
@@ -389,7 +389,7 @@ def Shift(G,i,j,k,l,xij,xkl):
         ijkl += comb_2_*xkl**(l-m)*ijm0 # I(i,j,k,l)<-I(i,j,m,0)  
     return ijkl
 
-@cuda.jit(fastmath=True, cache=True, device=True)
+# MLX compatible - no CUDA
 def Shift_3c2e(G,i,j,k,l,xij):
     
     ijm0 = 0.0
@@ -403,9 +403,9 @@ def Shift_3c2e(G,i,j,k,l,xij):
     ijkl = ijm0 # I(i,j,k,l)<-I(i,j,m,0)  
     return ijkl
 
-@cuda.jit(fastmath=True, cache=True, device=True)
+# MLX compatible - no CUDA
 def Shift_fp32(G,i,j,k,l,xij,xkl):
-    table = cuda.const.array_like(LOOKUP_TABLE_COMB) 
+    table = # cuda removed(LOOKUP_TABLE_COMB) 
     ijkl = 0.0 
     for m in range(l+1):
         ijm0 = 0.0
@@ -423,14 +423,14 @@ def Shift_fp32(G,i,j,k,l,xij,xkl):
         ijkl += comb_2_*xkl**(l-m)*ijm0 # I(i,j,k,l)<-I(i,j,m,0)  
     return ijkl
 
-@cuda.jit(fastmath=True, cache=True, device=True)
+# MLX compatible - no CUDA
 def Roots(n,X,DATA_X_,DATA_W_,roots,weights):
-    POLY_SMALLX_R0_ = cuda.const.array_like(POLY_SMALLX_R0)
-    POLY_SMALLX_R1_ = cuda.const.array_like(POLY_SMALLX_R1)
-    POLY_SMALLX_W0_ = cuda.const.array_like(POLY_SMALLX_W0)
-    POLY_SMALLX_W1_ = cuda.const.array_like(POLY_SMALLX_W1)
-    POLY_LARGEX_RT_ = cuda.const.array_like(POLY_LARGEX_RT)
-    POLY_LARGEX_WW_ = cuda.const.array_like(POLY_LARGEX_WW)
+    POLY_SMALLX_R0_ = # cuda removed(POLY_SMALLX_R0)
+    POLY_SMALLX_R1_ = # cuda removed(POLY_SMALLX_R1)
+    POLY_SMALLX_W0_ = # cuda removed(POLY_SMALLX_W0)
+    POLY_SMALLX_W1_ = # cuda removed(POLY_SMALLX_W1)
+    POLY_LARGEX_RT_ = # cuda removed(POLY_LARGEX_RT)
+    POLY_LARGEX_WW_ = # cuda removed(POLY_LARGEX_WW)
     PIE4 = 7.85398163397448E-01
     if X < 3.0E-7:
         off = n * (n - 1) // 2
@@ -461,7 +461,7 @@ def Roots(n,X,DATA_X_,DATA_W_,roots,weights):
     elif n>5 and n<11:
         return Rootn(X,n,DATA_X_,DATA_W_,roots,weights)
 
-@cuda.jit(fastmath=True, cache=True, device=True)
+# MLX compatible - no CUDA
 def clenshaw_d1(roots_or_weights, x, u, n):
     # Reference: https://github.com/sunqm/libcint/blob/master/src/polyfits.c (BSD-2 Clause license)
     i = 0
@@ -485,7 +485,7 @@ def clenshaw_d1(roots_or_weights, x, u, n):
 
     return roots_or_weights
         
-@cuda.jit(fastmath=True, cache=True, device=True)
+# MLX compatible - no CUDA
 def Rootn(X,n,DATA_X_,DATA_W_,roots,weights):
     datax = DATA_X_[((n - 1) * n // 2 - 15) * 14 * 31:]
     dataw = DATA_W_[((n - 1) * n // 2 - 15) * 14 * 31:]
@@ -504,7 +504,7 @@ def Rootn(X,n,DATA_X_,DATA_W_,roots,weights):
     weights = clenshaw_d1(weights, dataw[offset:], tt, n)
     return roots, weights
 
-@cuda.jit(fastmath=True, cache=True, device=True)
+# MLX compatible - no CUDA
 def Root1(X,n,roots,weights):
     if X < 3.0E-7:
         roots0 = 0.5E+00-X/5.0E+00
@@ -568,7 +568,7 @@ def Root1(X,n,roots,weights):
 R12,PIE4 = 2.75255128608411E-01, 7.85398163397448E-01
 R22,W22 =  2.72474487139158E+00, 9.17517095361369E-02
 
-@cuda.jit(fastmath=True, cache=True, device=True)
+# MLX compatible - no CUDA
 def Root2(X,n, roots, weights):
 
   if X < 3.E-7:
@@ -716,7 +716,7 @@ R13 = 1.90163509193487E-01
 R23,W23 = 1.78449274854325E+00, 1.77231492083829E-01
 R33,W33 = 5.52534374226326E+00, 5.11156880411248E-03
 
-@cuda.jit(fastmath=True, cache=True, device=True)
+# MLX compatible - no CUDA
 def Root3(X,n,roots, weights):
 
   if X < 3.0E-7:
@@ -970,7 +970,7 @@ R24,W24 = 1.33909728812636E+00, 2.34479815323517E-01
 R34,W34 = 3.92696350135829E+00, 1.92704402415764E-02
 R44,W44 = 8.58863568901199E+00, 2.25229076750736E-04
 
-@cuda.jit(fastmath=True, cache=True, device=True)
+# MLX compatible - no CUDA
 def Root4(X,n,roots, weights):
 
     if X <= 3.0E-7:
@@ -1309,7 +1309,7 @@ R35,W35 = 3.08593744371754E+00, 3.82231610015404E-02
 R45,W45 = 6.41472973366203E+00, 1.51614186862443E-03
 R55,W55 = 1.18071894899717E+01, 8.62130526143657E-06
 
-@cuda.jit(fastmath=True, cache=True, device=True)
+# MLX compatible - no CUDA
 def Root5(X,n, roots, weights):
     if X < 3.0E-7:
         roots0 = 2.26659266316985E-02 -2.15865967920897E-03 *X

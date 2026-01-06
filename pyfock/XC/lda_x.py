@@ -1,6 +1,14 @@
+# Try to import MLX for Apple Silicon acceleration
 try:
-    import cupy as cp
-    from cupy import fuse
+    import mlx.core as mx
+    MLX_AVAILABLE = True
+except ImportError:
+    MLX_AVAILABLE = False
+    mx = None
+
+try:
+    # import cupy as cp (replaced with MLX for Apple Silicon)
+    # from cupy import fuse (replaced with MLX for Apple Silicon)
 except Exception as e:
     # Handle the case when Cupy is not installed
     cp = None
@@ -84,9 +92,9 @@ def lda_x_cupy(rho):
 
     """
     
-    pi34 = (3 / (4 * cp.pi))**(1 / 3)
-    f = -3 / 4 * (3 / (2 * cp.pi))**(2 / 3)
-    rs = pi34 * cp.power(rho, -1 / 3)
+    pi34 = (3 / (4 * np.pi))**(1 / 3)
+    f = -3 / 4 * (3 / (2 * np.pi))**(2 / 3)
+    rs = pi34 * np.power(rho, -1 / 3)
     ex = f / rs
     vx = 4 / 3 * ex
     # return {'zk':ex, 'vrho':vx}

@@ -1,4 +1,4 @@
-import numba
+# import numba - removed for MLX compatibility
 import numpy as np
 from opt_einsum import contract
 from pyfock import Integrals

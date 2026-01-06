@@ -1,5 +1,5 @@
 import numpy as np
-from numba import njit, prange
+# # Removed numba import - using pure Python for MLX compatibility
 
 from .integral_helpers import innerLoop4c2e
 from .rys_helpers import coulomb_rys
@@ -73,7 +73,7 @@ def rys_3c2e_tri(basis, auxbasis):
 
     # Here the lists are converted to numpy arrays for better use with Numba.
     # Once these conversions are done we pass these to a Numba decorated
-    # function that uses prange, etc. to calculate the 3c2e integrals efficiently.
+    # function that uses range, etc. to calculate the 3c2e integrals efficiently.
     # This function calculates the 3c2e electron-electron ERIs for a given basis object and auxbasis object.
     # The basis object holds the information of basis functions like: exponents, coeffs, etc.
 
@@ -119,7 +119,7 @@ def rys_3c2e_tri(basis, auxbasis):
     ints3c2e = rys_3c2e_tri_internal(bfs_coords[0], bfs_contr_prim_norms[0], bfs_lmn[0], bfs_nprim[0], bfs_coeffs, bfs_prim_norms, bfs_expnts,aux_bfs_coords[0], aux_bfs_contr_prim_norms[0], aux_bfs_lmn[0], aux_bfs_nprim[0], aux_bfs_coeffs, aux_bfs_prim_norms, aux_bfs_expnts, basis.bfs_nao, auxbasis.bfs_nao)
     return ints3c2e
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def rys_3c2e_tri_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, bfs_coeffs, bfs_prim_norms, bfs_expnts,aux_bfs_coords, aux_bfs_contr_prim_norms, aux_bfs_lmn, aux_bfs_nprim, aux_bfs_coeffs, aux_bfs_prim_norms, aux_bfs_expnts, nbf, naux):
     # This function is a memory efficient version of rys_3c2e_symm_internal.
     # This does not support slicing and only returns a 2D array instead of a 3D array.
@@ -144,7 +144,7 @@ def rys_3c2e_tri_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, 
     alphalk = 0.0
 
     #Loop pver BFs
-    for i in prange(0, nbf): #A
+    for i in range(0, nbf): #A
         offset = int(i*(i+1)/2)
         I = bfs_coords[i]
         Ni = bfs_contr_prim_norms[i]
@@ -152,7 +152,7 @@ def rys_3c2e_tri_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, 
         la, ma, na = lmni
         nprimi = bfs_nprim[i]
         
-        for j in prange(0, i+1): #B
+        for j in range(0, i+1): #B
             J = bfs_coords[j]
             IJ = I - J
             IJsq = np.sum(IJ**2)
@@ -162,7 +162,7 @@ def rys_3c2e_tri_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, 
             tempcoeff1 = Ni*Nj
             nprimj = bfs_nprim[j]
             
-            for k in prange(0,  naux): #C
+            for k in range(0,  naux): #C
                 K = aux_bfs_coords[k]
                 Nk = aux_bfs_contr_prim_norms[k]
                 lmnk = aux_bfs_lmn[k]

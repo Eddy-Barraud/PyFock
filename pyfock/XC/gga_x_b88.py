@@ -1,6 +1,14 @@
+# Try to import MLX for Apple Silicon acceleration
 try:
-    import cupy as cp
-    from cupy import fuse
+    import mlx.core as mx
+    MLX_AVAILABLE = True
+except ImportError:
+    MLX_AVAILABLE = False
+    mx = None
+
+try:
+    # import cupy as cp (replaced with MLX for Apple Silicon)
+    # from cupy import fuse (replaced with MLX for Apple Silicon)
 except Exception as e:
     # Handle the case when Cupy is not installed
     cp = None
@@ -90,17 +98,17 @@ def gga_x_b88_e_cupy(rho, sigma):
 
     beta = 0.0042  # beta parameter
     beta6 = 6 * beta
-    const = (3 / 2) * ((3 / (4 * cp.pi)) ** (1 / 3))
+    const = (3 / 2) * ((3 / (4 * np.pi)) ** (1 / 3))
     two_m13 = 2 ** (-1 / 3)
     two_m43 = 1 / 2 * two_m13
 
 
     rho_13 = rho ** (1 / 3)
     rho_43 = two_m43 * rho * rho_13
-    gg = 1 / 2 * cp.sqrt(sigma)
+    gg = 1 / 2 * np.sqrt(sigma)
     x = gg / rho_43
     x2 = x ** 2
-    log_term = cp.log(x + cp.sqrt(1 + x2))
+    log_term = np.log(x + np.sqrt(1 + x2))
     ex = - two_m13 * rho_13 * (const + beta * x2 / (1 + beta6 * x * log_term))
 
     return ex
@@ -122,21 +130,21 @@ def gga_x_b88_v_cupy(rho, sigma):
     beta2 = 2 * beta
     beta6 = 6 * beta
     bbta6 = 6 * beta * beta
-    const = 3 / 2 * (3 / (4 * cp.pi)) ** (1 / 3)
+    const = 3 / 2 * (3 / (4 * np.pi)) ** (1 / 3)
 
     rho1 = 0.5 * rho
     rho_13 = rho1 ** (1 / 3)
     rho_43 = rho1 * rho_13
-    gg = 0.5 * cp.sqrt(sigma)
+    gg = 0.5 * np.sqrt(sigma)
     # print(cp.min(gg))
     x = gg / rho_43
     x2 = x * x
     # print(cp.min(x2))
-    sq = cp.sqrt(1 + x2)
+    sq = np.sqrt(1 + x2)
     # print(cp.isnan(cp.sum(sq)))
-    as_ = cp.log(x + sq) 
-    # sq = cp.sqrt(1 + x2)
-    # as_ = cp.log(cp.maximum(x + sq, 1e-12))
+    as_ = np.log(x + sq) 
+    # sq = np.sqrt(1 + x2)
+    # as_ = np.log(cp.maximum(x + sq, 1e-12))
     d = 1 / (1 + beta6 * x * as_)
     d2 = d * d
     g0 = const + beta * x2 * d

@@ -27,15 +27,20 @@ from numpy.linalg import eig, multi_dot as dot
 import scipy 
     
 from timeit import default_timer as timer
-import numba
+# import numba - removed for MLX compatibility
 from opt_einsum import contract
-import pylibxc
+try:
+    import pylibxc
+    PYLIBXC_AVAILABLE = True
+except ImportError:
+    PYLIBXC_AVAILABLE = False
+    pylibxc = None
 # import sparse
 # import dask.array as da
 from scipy.sparse import csr_matrix, csc_matrix
 # from memory_profiler import profile
 import os
-from numba import njit, prange, cuda
+# Removed numba import - using pure Python for MLX compatibility
 import numexpr
 try:
     import cupy as cp
@@ -48,13 +53,13 @@ except Exception as e:
     pass
 
 
-@njit(parallel=True, cache=True, fastmath=True, error_model="numpy")
+# MLX compatible - no JIT
 def compute_B(errVecs):
     nKS = errVecs.shape[0]
     B = np.zeros((nKS + 1, nKS + 1))
     B[-1, :] = B[:, -1] = -1.0
     B[-1, -1] = 0.0
-    for i in prange(nKS):
+    for i in range(nKS):
         # errVec_i_conj_T = errVecs[i].conj().T
         errVec_i_conj_T = errVecs[i].T
         for j in range(i + 1):
@@ -794,7 +799,7 @@ class DFT:
                     durationSchwarz = timer() - startSchwarz
                     print('Total time taken for Schwarz screening (partial) '+str(durationSchwarz)+' seconds.\n', flush=True)
                     
-                    # The following works alright, except it is not very parallel efficient (this uses prange)
+                    # The following works alright, except it is not very parallel efficient (this uses range)
                     ints3c2e = Integrals.schwarz_helpers.rys_3c2e_tri_schwarz_sparse_algo8(basis, auxbasis, count_significant, sqrt_ints4c2e_diag, sqrt_diag_ints2c2e, threshold_schwarz)
                 elif DF_algo==9:
                     print('\n\nPerforming Schwarz screening...')

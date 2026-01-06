@@ -1,6 +1,14 @@
+# Try to import MLX for Apple Silicon acceleration
 try:
-    import cupy as cp
-    from cupy import fuse
+    import mlx.core as mx
+    MLX_AVAILABLE = True
+except ImportError:
+    MLX_AVAILABLE = False
+    mx = None
+
+try:
+    # import cupy as cp (replaced with MLX for Apple Silicon)
+    # from cupy import fuse (replaced with MLX for Apple Silicon)
 except Exception as e:
     # Handle the case when Cupy is not installed
     cp = None
@@ -175,13 +183,13 @@ def pbe_x_temp_cupy(rho, sigma):
     mu = 0.2195149727645171
     kappa = 0.804
 
-    norm_dn = cp.sqrt(sigma)
-    kf = (3 * cp.pi**2 * rho)**(1 / 3)
+    norm_dn = np.sqrt(sigma)
+    kf = (3 * np.pi**2 * rho)**(1 / 3)
     divkf = 1 / kf
     s = norm_dn * divkf / (2 * rho)
     f1 = 1 + mu * s**2 / kappa
     Fx = kappa - kappa / f1
-    exunif = -3 * kf / (4 * cp.pi)
+    exunif = -3 * kf / (4 * np.pi)
     # In Fx a '1 + ' is missing, since n * exunif is the Slater exchange that is added later
     sx = exunif * Fx
 

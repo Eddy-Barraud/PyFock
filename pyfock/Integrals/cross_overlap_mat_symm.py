@@ -1,5 +1,5 @@
 import numpy as np
-from numba import njit , prange
+# # # Removed numba import - using pure Python for MLX compatibility
 
 from .integral_helpers import calcS
 
@@ -55,7 +55,7 @@ def cross_overlap_mat_symm(basisA, basisB, slice=None):
     """
     # Here the lists are converted to numpy arrays for better use with Numba.
     # Once these conversions are done we pass these to a Numba decorated
-    # function that uses prange, etc. to calculate the matrix efficiently.
+    # function that uses range, etc. to calculate the matrix efficiently.
 
     # This function calculates the overlap matrix between two basis objects: basisA and basisB.
     # The basis objects hold the information of basis functions like: exponents, coeffs, etc.
@@ -117,7 +117,7 @@ def cross_overlap_mat_symm(basisA, basisB, slice=None):
                                        a, b, c, d)
     return S
 
-@njit(parallel=True, cache=True)
+# MLX compatible - no JIT
 def cross_overlap_mat_internal(bfsA_coords, bfsA_contr_prim_norms, bfsA_lmn, bfsA_nprim, bfsA_coeffs, bfsA_prim_norms, bfsA_expnts,
                                    bfsB_coords, bfsB_contr_prim_norms, bfsB_lmn, bfsB_nprim, bfsB_coeffs, bfsB_prim_norms, bfsB_expnts,
                                    start_row, end_row, start_col, end_col):
@@ -140,11 +140,11 @@ def cross_overlap_mat_internal(bfsA_coords, bfsA_contr_prim_norms, bfsA_lmn, bfs
     # Initialize the matrix with zeros
     S = np.zeros(matrix_shape) 
 
-    for i in prange(start_row, end_row):
+    for i in range(start_row, end_row):
         I = bfsA_coords[i]
         lmni = bfsA_lmn[i]
         Ni = bfsA_contr_prim_norms[i]
-        for j in prange(start_col, end_col):
+        for j in range(start_col, end_col):
             result = 0.0
             
             J = bfsB_coords[j]
@@ -154,11 +154,11 @@ def cross_overlap_mat_internal(bfsA_coords, bfsA_contr_prim_norms, bfsA_lmn, bfs
             Nj = bfsB_contr_prim_norms[j]
             
             lmnj = bfsB_lmn[j]
-            for ik in prange(bfsA_nprim[i]):
+            for ik in range(bfsA_nprim[i]):
                 alphaik = bfsA_expnts[i][ik]
                 dik = bfsA_coeffs[i][ik]
                 Nik = bfsA_prim_norms[i][ik]
-                for jk in prange(bfsB_nprim[j]):
+                for jk in range(bfsB_nprim[j]):
                     
                     alphajk = bfsB_expnts[j][jk]
                     gamma = alphaik + alphajk

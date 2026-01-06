@@ -1,5 +1,5 @@
 import numpy as np
-import numba
+# import numba - removed for MLX compatibility
 
 def generate_cube_coords(mol, nx=100, ny=100, nz=100, padding=5.0):
     """

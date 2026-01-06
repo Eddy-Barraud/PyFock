@@ -1,5 +1,12 @@
 import numpy as np
-from numba import njit , prange
+
+# Try to import MLX for Apple Silicon acceleration
+try:
+    import mlx.core as mx
+    MLX_AVAILABLE = True
+except ImportError:
+    MLX_AVAILABLE = False
+    mx = None
 
 from .integral_helpers import calcS
 
@@ -12,7 +19,7 @@ def overlap_mat_symm(basis, slice=None):
     of the overlap matrix by specifying a slice.
 
     The integrals are computed using an efficient Numba-accelerated backend that 
-    benefits from parallelization via `prange` and preprocessed NumPy arrays.
+    benefits from parallelization via `range` and preprocessed NumPy arrays.
 
     Parameters
     ----------
@@ -49,7 +56,7 @@ def overlap_mat_symm(basis, slice=None):
     """
     # Here the lists are converted to numpy arrays for better use with Numba.
     # Once these conversions are done we pass these to a Numba decorated
-    # function that uses prange, etc. to calculate the matrix efficiently.
+    # function that uses range, etc. to calculate the matrix efficiently.
 
     # This function calculates the overlap matrix for a given basis object.
     # The basis object holds the information of basis functions like: exponents, coeffs, etc.
@@ -94,12 +101,12 @@ def overlap_mat_symm(basis, slice=None):
     S = overlap_mat_symm_internal(bfs_coords[0], bfs_contr_prim_norms[0], bfs_lmn[0], bfs_nprim[0], bfs_coeffs, bfs_prim_norms, bfs_expnts, a, b, c, d)
     return S
 
-@njit(parallel=True, cache=True)
+
 def overlap_mat_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_nprim, bfs_coeffs, bfs_prim_norms, bfs_expnts, start_row, end_row, start_col, end_col):
     # This function calculates the overlap matrix and uses the symmetry property to only calculate half-ish the elements
     # and get the remaining half by symmetry.
     # The reason we need this extra function is because we want the callable function to be simple and not require so many 
-    # arguments. But when using Numba to optimize, we can't have too many custom objects and stuff. Numba likes numpy arrays
+    # arguments. But when using NumPy to optimize, we can't have too many custom objects and stuff. NumPy likes numpy arrays
     # so passing those is okay. But lists and custom objects are not okay.
     # This function calculates the overlap matrix for a given basis object.
     # The basis object holds the information of basis functions like: exponents, coeffs, etc.
@@ -132,11 +139,11 @@ def overlap_mat_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_npr
     # Initialize the matrix with zeros
     S = np.zeros(matrix_shape) 
 
-    for i in prange(start_row, end_row):
+    for i in range(start_row, end_row):
         I = bfs_coords[i]
         lmni = bfs_lmn[i]
         Ni = bfs_contr_prim_norms[i]
-        for j in prange(start_col, end_col): #Because we are only evaluating the lower triangular matrix.
+        for j in range(start_col, end_col): #Because we are only evaluating the lower triangular matrix.
             if lower_tri or upper_tri or (both_tri_symm and j<=i) or both_tri_nonsymm:
                 result = 0.0
                 
@@ -147,11 +154,11 @@ def overlap_mat_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_npr
                 Nj = bfs_contr_prim_norms[j]
                 
                 lmnj = bfs_lmn[j]
-                for ik in prange(bfs_nprim[i]):
+                for ik in range(bfs_nprim[i]):
                     alphaik = bfs_expnts[i][ik]
                     dik = bfs_coeffs[i][ik]
                     Nik = bfs_prim_norms[i][ik]
-                    for jk in prange(bfs_nprim[j]):
+                    for jk in range(bfs_nprim[j]):
                         
                         alphajk = bfs_expnts[j][jk]
                         gamma = alphaik + alphajk
@@ -177,8 +184,8 @@ def overlap_mat_symm_internal(bfs_coords, bfs_contr_prim_norms, bfs_lmn, bfs_npr
 
     if both_tri_symm:
         #We save time by evaluating only the lower diagonal elements and then use symmetry Si,j=Sj,i 
-        for i in prange(start_row, end_row):
-            for j in prange(start_col, end_col):
+        for i in range(start_row, end_row):
+            for j in range(start_col, end_col):
                 if j>i:
                     S[i-start_row, j-start_col] = S[j-start_col, i-start_row]
     return S

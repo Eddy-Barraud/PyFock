@@ -1,6 +1,14 @@
+# Try to import MLX for Apple Silicon acceleration
 try:
-    import cupy as cp
-    from cupy import fuse
+    import mlx.core as mx
+    MLX_AVAILABLE = True
+except ImportError:
+    MLX_AVAILABLE = False
+    mx = None
+
+try:
+    # import cupy as cp (replaced with MLX for Apple Silicon)
+    # from cupy import fuse (replaced with MLX for Apple Silicon)
 except Exception as e:
     # Handle the case when Cupy is not installed
     cp = None
@@ -84,18 +92,18 @@ def gga_c_pbe_cupy_(rho, sigma):
     rho = cp.maximum(rho, 1e-12)
 
     beta = 0.06672455060314922
-    gamma = (1 - cp.log(2)) / cp.pi**2
+    gamma = (1 - np.log(2)) / np.pi**2
 
-    pi34 = (3 / (4 * cp.pi))**(1 / 3)
+    pi34 = (3 / (4 * np.pi))**(1 / 3)
     rs = pi34 * rho**(-1 / 3)
-    norm_dn = cp.sqrt(sigma)
+    norm_dn = np.sqrt(sigma)
     ec, vc = lda_c_pw_mod_cupy_(rho)
 
-    kf = (9 / 4 * cp.pi)**(1 / 3) / rs
-    ks = cp.sqrt(4 * kf / cp.pi)
+    kf = (9 / 4 * np.pi)**(1 / 3) / rs
+    ks = np.sqrt(4 * kf / np.pi)
     divt = 2 * ks * rho
     t = norm_dn / divt
-    expec = cp.exp(-ec / gamma)
+    expec = np.exp(-ec / gamma)
     A = beta / (gamma * (expec - 1))
     t2 = t**2
     At2 = A * t2
@@ -103,7 +111,7 @@ def gga_c_pbe_cupy_(rho, sigma):
     divsum = 1 + At2 + A2t4
     div = (1 + At2) / divsum
     nolog = 1 + beta / gamma * t2 * div
-    gec = gamma * cp.log(nolog)
+    gec = gamma * np.log(nolog)
 
     factor = A2t4 * (2 + At2) / divsum**2
     dgec = beta * t2 / nolog * (-7 / 3 * div - factor * (A * expec * (vc - ec) / beta - 7 / 3))

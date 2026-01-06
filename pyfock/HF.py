@@ -25,14 +25,14 @@ import numpy as np
 from numpy.linalg import eig, multi_dot as dot
 import scipy 
 from timeit import default_timer as timer
-import numba
+# import numba - removed for MLX compatibility
 from opt_einsum import contract
 # import sparse
 # import dask.array as da
 from scipy.sparse import csr_matrix, csc_matrix
 # from memory_profiler import profile
 import os
-from numba import njit, prange, cuda
+# Removed numba import - using pure Python for MLX compatibility
 import numexpr
 try:
     import cupy as cp
